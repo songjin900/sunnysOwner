@@ -97,13 +97,13 @@ export default function Layout({
   return (
     <div className="min-h-screen ">
       <Head>
-        <title>Sunny&apos;s&nbsp;Flowers</title>
+        <title>Sunny&apos;s&nbsp;Flowers-ADMIN</title>
       </Head>
       {/* top menu bar */}
       <div className="bg-white static w-full h-12 py-10 justify-between text-lg px-3 font-medium border-b-2 text-gray-800 top-0 flex items-center z-[-1] ">
         <div className="flex space-x-3 items-center">
           <Link legacyBehavior href={`/`}>
-            <span className="text-2xl font-bold cursor-pointer">Sunny&apos;s&nbsp;Flowers</span>
+            <span className="text-2xl font-bold cursor-pointer">Sunny&apos;s&nbsp;Flowers-ADMIN</span>
           </Link>
           <Link legacyBehavior href={`/shop`}>
             <span className="hidden p-1 text-base lg:block hover:bg-green-500 hover:text-white hover:rounded-2xl hover:p-1 hover:cursor-pointer">Shop</span>

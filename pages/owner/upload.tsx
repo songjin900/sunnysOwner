@@ -399,15 +399,15 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
 export const getServerSideProps = async () => {
 
   const eventDays = await client.eventDays.findMany({
-    where: {
-      visibility: true
-    }
+    // where: {
+    //   visibility: true
+    // }
   })
 
   const subMenuCategory = await client.subMenuCategory.findMany({
-    where: {
-      visibility: true
-    }
+    // where: {
+    //   visibility: true
+    // }
   })
 
   const menuCategory = await client.menuCategory.findMany({

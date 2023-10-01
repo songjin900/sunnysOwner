@@ -16,9 +16,9 @@ async function handler(
   if (req.method === "GET") {
 
     const eventDays = await client.eventDays.findMany({
-      where:{
-        visibility: true
-      }
+      // where:{
+      //   visibility: true
+      // }
     })
   
     res.json({
