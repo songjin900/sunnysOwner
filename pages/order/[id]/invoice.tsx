@@ -198,17 +198,11 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
 export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: { session: { user: { id: any; } }; }; }) {
 
     try {
-        if (!context.req.session.user?.id) {
-            throw new Error("User not found")
-        }
-
         const { id } = context.query;
-        const userId = context.req.session.user?.id;
 
         //Good
         const order = await client.order.findFirst({
             where: {
-                userId: userId,
                 id: Number(id),
             },
             include: {

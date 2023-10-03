@@ -180,7 +180,7 @@ const Products: NextPage = () => {
                                 </tr>)}
                         </tbody>
                     </table>
-                    <div className="flex flex-col min-w-[50rem]">
+                    <div className="flex flex-col min-w-[50rem] fixed top-0 -right-80 p-2 bg-gray-300">
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
                             <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
@@ -201,6 +201,9 @@ const Products: NextPage = () => {
                     </div>
                 </div>
             </div>
+            {/* <div className="fixed top-0 right-0 p-4">
+                                    sticky!!!
+            </div> */}
         </Layout>
     )
 }
