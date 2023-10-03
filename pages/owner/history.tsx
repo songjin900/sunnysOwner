@@ -32,10 +32,7 @@ const AllHistory: NextPage = () => {
     const [history, setHistory] = useState<AddressOrderItemWithOrder[]>([]);
     const [orderId, setOrderId] = useState(-1);
     const [updateStatus, { loading: statusLoading, data: statusData }] = useMutation<HistoryMutationResponse>(`/api/owner/history`);
-    const [selectedDate, setSelectedDate] = useState<Date | null>(null);
     const today = new Date();
-
-
 
     const onDatePickerChange = (date: Date) => {
         updateStatus({ orderId, deliveryDate: date });
@@ -90,7 +87,6 @@ const AllHistory: NextPage = () => {
     useEffect(() => {
         if (data) {
             setHistory(data.order);
-            console.log(data.order);
         }
     }, [data])
 

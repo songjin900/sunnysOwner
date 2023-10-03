@@ -41,8 +41,6 @@ async function handler(
       },
     }));
 
-    console.log("terms")
-    console.log(terms);
 
     const relatedProducts = await client.product.findMany({
       where: {
