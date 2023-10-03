@@ -97,7 +97,7 @@ export default function Layout({
   return (
     <div className="min-h-screen ">
       <Head>
-        <title>Sunny&apos;s&nbsp;Flowers-ADMIN</title>
+        <title>Sunny&apos;s&nbsp;Flowers-ADMIN_</title>
       </Head>
       {/* top menu bar */}
       <div className="bg-white static w-full h-12 py-10 justify-between text-lg px-3 font-medium border-b-2 text-gray-800 top-0 flex items-center z-[-1] ">
