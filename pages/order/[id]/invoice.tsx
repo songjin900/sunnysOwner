@@ -45,6 +45,8 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
     //     }
     // }, [ok, router])
 
+    console.log("I am in the invoice")
+
     const onDownloadButtonClick = () => {
         handleGeneratePDF();
     }
