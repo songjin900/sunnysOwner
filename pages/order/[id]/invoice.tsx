@@ -39,11 +39,11 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
         }
     };
 
-    useEffect(() => {
-        if (!ok) {
-            router.replace("/");
-        }
-    }, [ok, router])
+    // useEffect(() => {
+    //     if (!ok) {
+    //         router.replace("/");
+    //     }
+    // }, [ok, router])
 
     const onDownloadButtonClick = () => {
         handleGeneratePDF();
@@ -195,7 +195,7 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
     )
 }
 
-export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: { session: { user: { id: any; } }; }; }) {
+export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; } }) {
 
     try {
         const { id } = context.query;
