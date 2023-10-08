@@ -21,6 +21,7 @@ async function handler(
             eventDaysId: true,
           },
         },
+        description: true
       },
     });
     res.json({
@@ -32,7 +33,7 @@ async function handler(
   //update Status
   if (req.method === "POST") {
     const {
-      body: { id, name, price, stockQuantity, eventDay },
+      body: { id, name, price, stockQuantity, eventDay, description },
     } = req;
     try {
       const product = await client.product.update({
@@ -43,6 +44,7 @@ async function handler(
           name,
           price: Number(price),
           stockQuantity: Number(stockQuantity),
+          description
         },
       });
 
