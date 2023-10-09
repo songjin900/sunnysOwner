@@ -239,10 +239,6 @@ const Checkout: NextPage<{ cart: ProductWithCart[]; totalCostBeforeTax: string; 
     }
   }, [cart, router])
 
-
-
-console.log(hour);
-
   return (
     <Layout canGoBack title="Order">
       <LoadingAnimation showLoadingAnimation={showLoadingAnimation} />

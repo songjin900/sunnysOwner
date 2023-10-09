@@ -21,7 +21,8 @@ interface products {
     price: number,
     stockQuantity: number,
     image: string,
-    productEventDay: productEventDayId[]
+    productEventDay: productEventDayId[],
+    description: string
 }
 
 interface productInterface {
@@ -35,13 +36,13 @@ interface productForm {
     price: number;
     stockQuantity: number;
     eventDay: string[];
+    description: string;
 }
 
 interface EventDaysResponse {
     ok: boolean,
     eventDays: EventDays[]
 }
-
 
 const Products: NextPage = () => {
     const [updateProduct] = useMutation("/api/owner/products");
@@ -52,14 +53,13 @@ const Products: NextPage = () => {
     const [selectedPrice, setSelectedPrice] = useState<number>();
     const [selectedStockQuantity, setSelectedStockQuantity] = useState<number>();
     const [selectedEventDay, setSelectedEventDay] = useState<string[]>([]);
+    const [selectedDescription, setDescription] = useState<string>();
     const [showImage, setShowImage] = useState(false);
     const { data, mutate } = useSWR<productInterface>(`/api/owner/products`);
     const { data: eventDayData } = useSWR<EventDaysResponse>("/api/utils/eventday");
     const [deleteSelected, setDeleteSelected] = useState(false);
 
-
-
-    const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[]) => {
+    const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[], description: string) => {
         if (id && name && price && stockQuantity) {
             setSelectedId(id);
             setSelectedName(name);
@@ -67,10 +67,11 @@ const Products: NextPage = () => {
             setSelectedStockQuantity(stockQuantity);
             setSelectedEventDay(eventDay)
             setDeleteSelected(false);
+            setDescription(description);
         }
     }
 
-    const onValid = ({ id, name, price, stockQuantity, eventDay }: productForm) => {
+    const onValid = ({ id, name, price, stockQuantity, eventDay,description }: productForm) => {
 
         if (!data || !data?.products)
             return
@@ -86,6 +87,7 @@ const Products: NextPage = () => {
                     name: name,
                     price: price,
                     stockQuantity: stockQuantity,
+                    description: description,
                     productEventDay: eventDay.map((eventDaysId) => ({ eventDaysId }))
                 },
                 ...(data?.products?.slice(index + 1) || [])
@@ -97,7 +99,8 @@ const Products: NextPage = () => {
             name,
             price,
             stockQuantity,
-            eventDay
+            eventDay,
+            description
         });
 
         setShowImage(true);
@@ -109,18 +112,17 @@ const Products: NextPage = () => {
     }
 
     useEffect(() => {
-        if (selectedId && selectedName && selectedPrice && selectedStockQuantity) {
+        if (selectedId && selectedName && selectedPrice && selectedStockQuantity && selectedDescription) {
             setValue("id", selectedId);
             setValue("name", selectedName);
             setValue("price", selectedPrice);
             setValue("stockQuantity", selectedStockQuantity);
-            setValue("eventDay", selectedEventDay)
+            setValue("eventDay", selectedEventDay);
+            setValue("description", selectedDescription);
         }
-    }, [selectedId, selectedName, selectedPrice, selectedStockQuantity, selectedEventDay, setValue])
+    }, [selectedId, selectedName, selectedPrice, selectedStockQuantity, selectedEventDay, setValue,selectedDescription])
 
     const onDeleteClicked = ()=>{
-        
-
         if (selectedId)
             deleteProduct({productId: selectedId});
     }
@@ -160,7 +162,7 @@ const Products: NextPage = () => {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {data?.products?.map((product) =>
-                                <tr key={product.id} className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`} onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()))}>
+                                <tr key={product.id} className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`} onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description)}>
                                     <Link legacyBehavior href={`/products/${product.id}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-blue-700 underline cursor-pointer">{product.id}</td>
                                     </Link>
@@ -194,6 +196,7 @@ const Products: NextPage = () => {
                                 kind="event"
                                 eventDays={eventDayData?.eventDays}
                             />
+                            <Input register={register("description", { required: true })} required label="Description*" name="description" kind="text" type={""} />
                             <button className="p-2 rounded-lg text-white bg-green-500">Update</button>
                         </form>
                         <button className={`ml-4 p-2 rounded-lg text-white bg-red-500 w-28`} onClick={()=>setDeleteSelected(true)}>Delete</button>
@@ -201,9 +204,6 @@ const Products: NextPage = () => {
                     </div>
                 </div>
             </div>
-            {/* <div className="fixed top-0 right-0 p-4">
-                                    sticky!!!
-            </div> */}
         </Layout>
     )
 }

@@ -11,13 +11,13 @@ export function middleware(req: NextRequest, ev: NextFetchEvent) {
     console.log("hello Bot Please get out");
   }
 
-  if (
-    !req.cookies.has("sunnyssession") &&
-    !req.nextUrl.pathname.startsWith("/api") &&
-    req.url.includes("/order")
-  ) {
-    req.nextUrl.searchParams.set("from", req.nextUrl.pathname);
-    req.nextUrl.pathname = "/shop";
-    return NextResponse.redirect(req.nextUrl);
-  }
+  // if (
+  //   !req.cookies.has("sunnyssession") &&
+  //   !req.nextUrl.pathname.startsWith("/api") &&
+  //   req.url.includes("/order")
+  // ) {
+  //   req.nextUrl.searchParams.set("from", req.nextUrl.pathname);
+  //   req.nextUrl.pathname = "/shop";
+  //   return NextResponse.redirect(req.nextUrl);
+  // }
 }
