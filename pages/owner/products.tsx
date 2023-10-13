@@ -4,11 +4,12 @@ import Link from "next/link";
 import useMutation from "@libs/client/useMutation";
 import { useForm } from "react-hook-form";
 import Input from "@components/input";
-import { useEffect, useState } from "react";
-import useSWR from "swr";
+import { useEffect, useRef, useState } from "react";
 import Checkmark from "@components/checkmark";
 import Image from "next/image";
 import { EventDays } from "@prisma/client";
+import { useRouter } from 'next/router';
+import client from "@libs/server/client";
 
 interface productEventDayId {
     eventDaysId: string
@@ -25,11 +26,6 @@ interface products {
     description: string
 }
 
-interface productInterface {
-    ok: boolean;
-    products: products[]
-}
-
 interface productForm {
     id: number;
     name: string;
@@ -39,12 +35,7 @@ interface productForm {
     description: string;
 }
 
-interface EventDaysResponse {
-    ok: boolean,
-    eventDays: EventDays[]
-}
-
-const Products: NextPage = () => {
+const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ products, eventDays }) => {
     const [updateProduct] = useMutation("/api/owner/products");
     const [deleteProduct, { loading: deleteLoading, data: deleteData }] = useMutation("/api/owner/products/delete")
     const { register, handleSubmit, setValue, setError, formState: { errors } } = useForm<productForm>();
@@ -55,9 +46,29 @@ const Products: NextPage = () => {
     const [selectedEventDay, setSelectedEventDay] = useState<string[]>([]);
     const [selectedDescription, setDescription] = useState<string>();
     const [showImage, setShowImage] = useState(false);
-    const { data, mutate } = useSWR<productInterface>(`/api/owner/products`);
-    const { data: eventDayData } = useSWR<EventDaysResponse>("/api/utils/eventday");
     const [deleteSelected, setDeleteSelected] = useState(false);
+    const router = useRouter();
+    // const divRefProduct = useRef<HTMLTableRowElement>(null);
+    const divRefProduct = useRef<any>(null);
+
+
+    const { productId = "" } = router.query;
+
+    useEffect(() => {
+        if (productId && products) {
+            setSelectedId(+productId);
+            const product = products.find((p)=>p.id===+productId);
+            setSelectedName(product?.name);
+            setSelectedPrice(product?.price);
+            setSelectedStockQuantity(product?.stockQuantity);
+            setSelectedEventDay(product?.productEventDay.map(p => p.eventDaysId.toString())??[])
+            setDeleteSelected(false);
+            setDescription(product?.description);
+            const productIndex = products.findIndex((p) => p.id === +productId);
+            scrollToProduct(productIndex);
+
+        }
+    }, [productId])
 
     const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[], description: string) => {
         if (id && name && price && stockQuantity) {
@@ -68,31 +79,25 @@ const Products: NextPage = () => {
             setSelectedEventDay(eventDay)
             setDeleteSelected(false);
             setDescription(description);
+            window.history.pushState({}, '', '/owner/products');
         }
     }
 
-    const onValid = ({ id, name, price, stockQuantity, eventDay,description }: productForm) => {
+    const onValid = ({ id, name, price, stockQuantity, eventDay, description }: productForm) => {
 
-        if (!data || !data?.products)
+        if (!products)
             return
 
-        const index = data.products.findIndex(item => item.id === id);
+        const index = products.findIndex(item => item.id === id);
 
-        mutate({
-            ...data,
-            products: [
-                ...(data?.products?.slice(0, index) || []),
-                {
-                    ...(data?.products?.[index] || {}),
-                    name: name,
-                    price: price,
-                    stockQuantity: stockQuantity,
-                    description: description,
-                    productEventDay: eventDay.map((eventDaysId) => ({ eventDaysId }))
-                },
-                ...(data?.products?.slice(index + 1) || [])
-            ]
-        }, false)
+        const updatedData = [...products];
+
+        // Update the field
+        updatedData[index].name = name;
+        updatedData[index].price = price;
+        updatedData[index].stockQuantity = stockQuantity;
+        updatedData[index].productEventDay = eventDay.map((eventDaysId) => ({ eventDaysId }));
+        updatedData[index].description = description;
 
         updateProduct({
             id,
@@ -120,12 +125,20 @@ const Products: NextPage = () => {
             setValue("eventDay", selectedEventDay);
             setValue("description", selectedDescription);
         }
-    }, [selectedId, selectedName, selectedPrice, selectedStockQuantity, selectedEventDay, setValue,selectedDescription])
+    }, [selectedId, selectedName, selectedPrice, selectedStockQuantity, selectedEventDay, setValue, selectedDescription])
 
-    const onDeleteClicked = ()=>{
+    const onDeleteClicked = () => {
         if (selectedId)
-            deleteProduct({productId: selectedId});
+            deleteProduct({ productId: selectedId });
     }
+
+    const productRefs = products?.map(() => useRef<any>(null));
+
+    const scrollToProduct = (index:number) => {
+        if (productRefs[index].current) {
+            productRefs[index].current.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
 
     return (
         <Layout title="Home" hasTabBar>
@@ -160,17 +173,20 @@ const Products: NextPage = () => {
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200">
-                            {data?.products?.map((product) =>
-                                <tr key={product.id} className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`} onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description)}>
+                        <tbody className="bg-white divide-y divide-gray-200" ref={divRefProduct} >
+                            {products?.map((product, index) =>
+                                <tr key={product.id} 
+                                ref={productRefs[index]} 
+                                className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`} 
+                                onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description)}>
                                     <Link legacyBehavior href={`/products/${product.id}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-blue-700 underline cursor-pointer">{product.id}</td>
                                     </Link>
-                                    <td>
+                                    <td >
                                         <Image
                                             src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${product.image}/imageSlide`}
-                                            width={75}
-                                            height={75}
+                                            width={100}
+                                            height={100}
                                             alt=""
                                             loading="lazy" />
                                     </td>
@@ -178,11 +194,11 @@ const Products: NextPage = () => {
                                     <td className="px-6 py-4 whitespace-nowrap ">{product.name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap ">{product.price}</td>
                                     <td className="px-6 py-4 whitespace-nowrap ">{product.stockQuantity}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap ">{product.productEventDay?.map((p) => <div key={p.eventDaysId}>{eventDayData?.eventDays.find((d) => d.id === Number(p.eventDaysId))?.name}</div>)}</td>
+                                    <td className="px-6 py-4 whitespace-nowrap ">{product.productEventDay?.map((p) => <div key={p.eventDaysId}>{eventDays.find((d) => d.id === Number(p.eventDaysId))?.name}</div>)}</td>
                                 </tr>)}
                         </tbody>
                     </table>
-                    <div className="flex flex-col min-w-[50rem] fixed top-0 -right-80 p-2 bg-gray-300">
+                    <div className="flex flex-col min-w-[47rem] fixed top-0 -right-80 p-2 bg-gray-300">
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
                             <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
@@ -194,18 +210,48 @@ const Products: NextPage = () => {
                                 name="eventDay"
                                 type="text"
                                 kind="event"
-                                eventDays={eventDayData?.eventDays}
+                                eventDays={eventDays}
                             />
                             <Input register={register("description", { required: true })} required label="Description*" name="description" kind="text" type={""} />
                             <button className="p-2 rounded-lg text-white bg-green-500">Update</button>
                         </form>
-                        <button className={`ml-4 p-2 rounded-lg text-white bg-red-500 w-28`} onClick={()=>setDeleteSelected(true)}>Delete</button>
-                        <button className={`ml-4 mt-2 p-2 rounded-lg text-white bg-red-700 w-56 ${deleteSelected ? "block": "hidden"}`} onClick={()=>onDeleteClicked()} >Delete Confirmation</button>
+                        <button className={`ml-4 p-2 rounded-lg text-white bg-red-500 w-28`} onClick={() => setDeleteSelected(true)}>Delete</button>
+                        <button className={`ml-4 mt-2 p-2 rounded-lg text-white bg-red-700 w-56 ${deleteSelected ? "block" : "hidden"}`} onClick={() => onDeleteClicked()} >Delete Confirmation</button>
                     </div>
                 </div>
             </div>
         </Layout>
     )
 }
+
+
+export const getServerSideProps = async () => {
+    const products = await client.product.findMany({
+        select: {
+            id: true,
+            name: true,
+            price: true,
+            stockQuantity: true,
+            image: true,
+            localImage: true,
+            productEventDay: {
+                select: {
+                    eventDaysId: true,
+                },
+            },
+            description: true
+        },
+    });
+
+    const eventDays = await client.eventDays.findMany({
+    })
+
+    return {
+        props: {
+            products: JSON.parse(JSON.stringify(products)),
+            eventDays: JSON.parse(JSON.stringify(eventDays))
+        },
+    };
+};
 
 export default Products;

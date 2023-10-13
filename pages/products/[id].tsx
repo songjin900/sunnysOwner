@@ -105,6 +105,10 @@ const ItemDetail: NextPage<{ product: ProductWithSubCategoryImage; relatedProduc
         }
     }, [isLogin, userData])
 
+    const onEditClicked = () =>{
+        router.push(`/owner/products?productId=${router.query.id}`)
+    }
+
     return (
         <Layout title="View Product" hasTabBar >
             <LoadingAnimation showLoadingAnimation={showLoadingAnimation} />
@@ -185,7 +189,11 @@ const ItemDetail: NextPage<{ product: ProductWithSubCategoryImage; relatedProduc
                                                 </button>
                                     }
                                 </div>
+
                             </div>
+                            <button className="p-2 bg-red-300 rounded-3xl" onClick={()=>onEditClicked()}>
+                                수정하기
+                            </button>
                         </div>
                     </div>
                     <RelatedProducts relatedProducts={relatedProducts} />
@@ -260,7 +268,7 @@ export const getServerSideProps = withSsrSession(async function (context: { quer
             name: {
                 contains: word,
             }
-        }));       
+        }));
 
         const relatedProducts = await client.product.findMany({
             where: {

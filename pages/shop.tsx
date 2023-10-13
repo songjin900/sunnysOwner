@@ -1,6 +1,6 @@
 import Item from "@components/items";
 import Layout from "@components/layout";
-import { Product, SubMenuCategory, MenuCategory, ProductSubMenuCategory, ProductEventDay, EventDays } from "@prisma/client";
+import { Product, SubMenuCategory, MenuCategory, EventDays } from "@prisma/client";
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from 'next/router';
 import { NextPage } from "next";
@@ -11,8 +11,9 @@ interface SubMenuWithMenu extends MenuCategory {
     subMenuCategory: SubMenuCategory[]
 }
 
-async function fetchProducts(param: string) {
+async function fetchProducts(param: string, fetchNum: number) {
     const productResponse = await fetch(`/api/products${param}`);
+
     return productResponse.json();
 }
 
@@ -22,10 +23,8 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
     const [products, setProducts] = useState<Product[]>([]);
     const [menuCategory, setMenuCategoryData] = useState<SubMenuWithMenu[]>(menu);
     const [eventDay, setEventDayData] = useState<EventDays[]>(event);
-    const [queryParam, setQueryParam] = useState("");
-    const [initialFetch, setInitialFetch] = useState(true);
 
-    const { menuCategoryId = "", subMenuCategoryId = "", search = "", eventDaysId = "", sort = "", page = 1 } = router.query;
+    const { menuCategoryId = "", subMenuCategoryId = "", search = "", eventDaysId = "", sort = "", page = "" } = router.query;
 
     const [category, setCategory] = useState(-1);
     const [subCategory, setSubCategory] = useState(-1);
@@ -41,117 +40,115 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
 
     const divRefMenu = useRef<HTMLDivElement>(null);
 
-    const scrollToDiv = () => {
-        // if (divRefMenu.current)
-        //     divRefMenu.current.scrollIntoView({ behavior: 'auto' })
-    };
-
+    //this seems like it is coming from the URL. Test 
     useEffect(() => {
-        if (menuCategoryId)
+        if (menuCategoryId) {
             setCategory(+menuCategoryId);
+        }
     }, [menuCategoryId])
 
     useEffect(() => {
-        if (subMenuCategoryId)
+        if (subMenuCategoryId) {
             setSubCategory(+subMenuCategoryId)
+        }
     }, [subMenuCategoryId])
 
-    useEffect(()=>{
-        if (pageNum){
+    useEffect(() => {
+        if (page) {
             setPageNum(+page);
         }
-    },[page])
+    }, [page])
+
+    useEffect(() => {
+        if (search) {
+            setSearchWord(search + "");
+        }
+    }, [search])
 
     useEffect(() => {
         if (eventDaysId)
             setSelectedEventMenu(+eventDaysId)
     }, [eventDaysId])
 
-    const onCategoryChange = (category: number) => {
-        setCategory(category);
-    }
-
-    const onSubCategoryChange = (subCategory: number) => {
-        setSubCategory(subCategory);
-    }
-
-    const onSortingChange = (sorting: string) => {
-        setSorting(sorting);
-    }
-
+    //This is for getting values from the URL
+    //example: back button or url copy and paste
     useEffect(() => {
-        setPageNum(1);
-    }, [selectedEventMenu, category])
 
-    useEffect(() => {
-        if (!search && !menuCategoryId && !subMenuCategoryId && !eventDaysId) {
-            const fetchData = async () => {
-                const dataResponse = await fetchProducts(``)
-                setProducts(dataResponse.products);
-                setPageArray(Array.from({ length: dataResponse.pages }, (_, index) => index + 1))
-            };
-            fetchData();
-            setInitialFetch(false);
+        let urlContainsValue = false;
+        if (search) {
+            setSearchWord(search + "");
+            urlContainsValue = true;
+        }
+
+        if (menuCategoryId) {
+            setCategory(+menuCategoryId);
+            urlContainsValue = true;
+        }
+
+        if (subMenuCategoryId) {
+            const menuId = menu.find(x => x.subMenuCategory.find(y => y.id === +subMenuCategoryId))?.id
+            setCategory(menuId ?? -1);
+            setSubCategory(+subMenuCategoryId)
+            urlContainsValue = true;
+        }
+
+        if (eventDaysId) {
+            setSelectedEventMenu(+eventDaysId)
+            urlContainsValue = true;
+        }
+
+        if (sort) {
+            setSorting(sort + "");
+            urlContainsValue = true;
+        }
+
+        if (page) {
+            setPageNum(+page)
+            urlContainsValue = true;
+        }
+
+        //if url is /shop or /shop?sort=la&page=2
+        if (!urlContainsValue || !search && !subMenuCategoryId && !eventDaysId && !menuCategoryId) {
+            setCategory(6);
+            let pageNumber = +page;
+            if (page === "" || +page === 0) {
+                pageNumber = 1;
+            }
+            setPageNum(pageNumber)
         }
     }, []) // do not put anything here. this is just initial run
 
+    //all Routing
     useEffect(() => {
-        if (search && initialFetch)
-            return;
-
-        if (initialFetch)
-            return;
-
-        //i need to put a condition so that it does not run when it first render
-        const fetchData = async () => {
-            let url = `${queryParam}&sort=${sorting ? sorting : "la"}&page=${pageNum}`;
-            if (queryParam === '') {
-                url = `?sort=${sorting ? sorting : "la"}&page=${pageNum}`;
+        if (searchWord) {
+            let pageNumber = pageNum;
+            if (category !== -1 || subCategory !== -1 || selectedEventMenu !== -1){
+                pageNumber = 1;
+                setPageNum(1);
             }
-            router.push(url);
-            const dataResponse = await fetchProducts(`${url}`)
-            setProducts(dataResponse.products);
-        };
-        fetchData();
-    }, [pageNum, sorting]) //do not put queryParam and initialFetch. this makes re-render twice
-
-    useEffect(() => {
-        if (search !== searchWord) {
-            setSearchWord(search + "");
             setCategory(-1);
             setSubCategory(-1);
             setSelectedEventMenu(-1);
 
-            setInitialFetch(false);
-
-            setQueryParam(`?search=${search}`);
+            let url = `?search=${searchWord}` + `${sorting ? `&sort=${sorting}` : `&sort=la`}` + `&page=${pageNumber}`
+          
             const fetchData = async () => {
-                router.push(`?search=${search}`);
-                const dataResponse = await fetchProducts(`?search=${search}`)
+                router.push(url);
+                const dataResponse = await fetchProducts(url, 2);
                 setProducts(dataResponse.products);
                 setPageArray(Array.from({ length: dataResponse.pages }, (_, index) => index + 1))
             };
             fetchData();
-        }
-    }, [search]) // do not add searchWord
-
-    useEffect(() => {
-
-        if (selectedEventMenu !== -1) {
-            setInitialFetch(false);
+        } else if (selectedEventMenu !== -1) {
             setSearchWord("");
             setCategory(-1);
             setSubCategory(-1);
 
-            if (search) {
-                router.push(`/shop`);
-            }
-
-            setQueryParam(`?eventDaysId=${selectedEventMenu}`);
+            let url = `?eventDaysId=${selectedEventMenu}` + `${sorting ? `&sort=${sorting}` : `&sort=la`}` + `${pageNum ? `&page=${pageNum}` : `&page=1`}`
 
             const fetchData = async () => {
-                router.push(`?eventDaysId=${selectedEventMenu}`);
-                const dataResponse = await fetchProducts(`?eventDaysId=${selectedEventMenu}`)
+                router.push(url);
+                const dataResponse = await fetchProducts(url, 3);
                 setProducts(dataResponse.products);
                 setPageArray(Array.from({ length: dataResponse.pages }, (_, index) => index + 1))
             };
@@ -159,16 +156,11 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
         }
         else if (subCategory !== -1) {
 
-            setInitialFetch(false);
-            if (search) {
-                router.push(`/shop`);
-            }
-
-            setQueryParam(`?subMenuCategoryId=${subCategory}`);
+            let url = `?subMenuCategoryId=${subCategory}` + `${sorting ? `&sort=${sorting}` : `&sort=la`}` + `${pageNum ? `&page=${pageNum}` : `&page=1`}`
 
             const fetchData = async () => {
-                router.push(`?subMenuCategoryId=${subCategory}`);
-                const dataResponse = await fetchProducts(`?subMenuCategoryId=${subCategory}`)
+                router.push(url);
+                const dataResponse = await fetchProducts(url, 4);
                 setProducts(dataResponse.products);
                 setPageArray(Array.from({ length: dataResponse.pages }, (_, index) => index + 1))
             };
@@ -176,43 +168,38 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
         }
         else if (category !== -1) {
 
-            setInitialFetch(false);
-            if (search) {
-                router.push(`/shop`);
-            }
-
             setSearchWord("");
             setSelectedEventMenu(-1);
 
             //shop all
             if (category === 6) {
-                setQueryParam(``);
+                let url = `?${sorting ? `sort=${sorting}` : `sort=la`}` + `${pageNum ? `&page=${pageNum}` : `&page=1`}`
+
                 const fetchData = async () => {
-                    router.push(``);
-                    const dataResponse = await fetchProducts(``)
+                    router.push(url);
+                    const dataResponse = await fetchProducts(url, 5);
                     setProducts(dataResponse.products);
                     setPageArray(Array.from({ length: dataResponse.pages }, (_, index) => index + 1))
                 };
                 fetchData();
             }
             else {
-                setQueryParam(`?menuCategoryId=${category}`);
+                let url = `?menuCategoryId=${category}` + `${sorting ? `&sort=${sorting}` : `&sort=la`}` + `${pageNum ? `&page=${pageNum}` : `&page=1`}`
+
                 const fetchData = async () => {
-                    router.push(`?menuCategoryId=${category}`);
-                    const dataResponse = await fetchProducts(`?menuCategoryId=${category}`)
+                    router.push(url);
+                    const dataResponse = await fetchProducts(url, 6);
                     setProducts(dataResponse.products);
                     setPageArray(Array.from({ length: dataResponse.pages }, (_, index) => index + 1))
                 };
                 fetchData();
             }
         }
-
-    }, [category, subCategory, selectedEventMenu]) //do not put Router here
+    }, [searchWord, category, subCategory, selectedEventMenu, pageNum, sorting]) //do not put Router here
 
     return (
         <Layout title="Home" hasTabBar>
             <div className="w-full" ref={divRefMenu}>
-                {/* <LoadingAnimation showLoadingAnimation={showLoadingAnimation} /> */}
                 <div className={`w-full`}>
                     {/* mobile view */}
                     <div>
@@ -231,7 +218,7 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
 
                             {/* mobileView */}
                             <div className="w-full h-full overflow-y-auto">
-                                <MobileMenu menuCategory={menuCategory} eventDay={eventDay} setSelectedEventMenu={setSelectedEventMenu} setOpenRefine={setOpenRefine} onCategoryChange={onCategoryChange} onSubCategoryChange={onSubCategoryChange} ></MobileMenu>
+                                <MobileMenu menuCategory={menuCategory} eventDay={eventDay} setSelectedEventMenu={setSelectedEventMenu} setOpenRefine={setOpenRefine} setCategory={setCategory} setSubCategory={setSubCategory} setSearchWord={setSearchWord} setPageNum={setPageNum}></MobileMenu>
                             </div>
                         </div>
                     </div>
@@ -246,11 +233,11 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
                         </div>
                         <div className="flex flex-col">
                             <span className="text-gray-900 text-2xl font-medium mt-4">Sort</span>
-                            <span onClick={() => { onSortingChange("la"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "la" ? "underline" : ""}`}>Latest</span>
-                            <span onClick={() => { onSortingChange("pa"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "pa" ? "underline" : ""}`}>Price: Low to high</span>
-                            <span onClick={() => { onSortingChange("pd"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "pd" ? "underline" : ""}`}>Price: High to low</span>
-                            <span onClick={() => { onSortingChange("na"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "na" ? "underline" : ""}`}>Name: Ascending</span>
-                            <span onClick={() => { onSortingChange("nd"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "nd" ? "underline" : ""}`}>Name: Descending</span>
+                            <span onClick={() => { setSorting("la"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "la" ? "underline" : ""}`}>Latest</span>
+                            <span onClick={() => { setSorting("pa"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "pa" ? "underline" : ""}`}>Price: Low to high</span>
+                            <span onClick={() => { setSorting("pd"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "pd" ? "underline" : ""}`}>Price: High to low</span>
+                            <span onClick={() => { setSorting("na"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "na" ? "underline" : ""}`}>Name: Ascending</span>
+                            <span onClick={() => { setSorting("nd"); setOpenSort(false) }} className={`text-gray-600 mt-1 cursor-pointer text-xl p-1 hover:border-2 hover:border-dashed hover:font-bold ${sorting === "nd" ? "underline" : ""}`}>Name: Descending</span>
                         </div>
                     </div>
 
@@ -267,7 +254,7 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
                                             .map((menu) => (
                                                 <div key={menu.id}>
                                                     <div className="flex items-center space-x-2">
-                                                        <span onClick={() => { onCategoryChange(menu.id); setSearchWord(""); setSubCategory(-1); setSelectedEventMenu(-1) }}
+                                                        <span onClick={() => {setSearchWord(""); setCategory(menu.id); setSubCategory(-1); setSelectedEventMenu(-1); setPageNum(1); }}
                                                             className={`text-gray-600 mt-1 cursor-pointer text-lg 
                                                                 ${category === menu.id && menu.category === "all" || (category === menu.id) ? "underline text-green-700 font-bold" : ""}`}>{menu.categoryDisplay}
                                                         </span>
@@ -293,7 +280,7 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
                                                                     {
                                                                         menu.subMenuCategory.map((submenu) => submenu.platform === "both" ? (
                                                                             <div key={submenu.subCategoryDisplay} >
-                                                                                <span onClick={() => { onSubCategoryChange(submenu.id ?? -1) }}
+                                                                                <span onClick={() => { setSubCategory(submenu.id ?? -1); setPageNum(1) }}
                                                                                     className={`text-gray-600 mt-1 cursor-pointer text-lg ml-2 ${category === menu.id ? "" : "hidden"} ${subCategory === submenu.id ?
                                                                                         "underline text-green-700 font-bold" : ""}`}>{submenu.subCategoryDisplay}</span>
                                                                             </div>
@@ -313,18 +300,18 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
                                     eventDay.filter(x => x.visibility === true).map((day) => (
                                         <div key={day.id} className="">
                                             <span
-                                                onClick={() => { setSelectedEventMenu(day.id) }}
+                                                onClick={() => { setSelectedEventMenu(day.id); setPageNum(1) }}
                                                 className={`text-gray-600 flex mb-1 cursor-pointer text-lg ${selectedEventMenu === day.id ? `underline text-green-700 font-bold` : ""}`} >{day.name}</span>
                                         </div>
                                     ))
                                 }
 
                                 <span className="text-gray-600 text-xl font-bold mt-6 mb-4">Sort</span>
-                                <span onClick={() => { onSortingChange("la") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "la" ? "underline" : ""}`}>Latest</span>
-                                <span onClick={() => { onSortingChange("pa") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "pa" ? "underline" : ""}`}>Price: Low to high</span>
-                                <span onClick={() => { onSortingChange("pd") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "pd" ? "underline" : ""}`}>Price: High to low</span>
-                                <span onClick={() => { onSortingChange("na") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "na" ? "underline" : ""}`}>Name: Ascending</span>
-                                <span onClick={() => { onSortingChange("nd") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "nd" ? "underline" : ""}`}>Name: Descending</span>
+                                <span onClick={() => { setSorting("la") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "la" ? "underline" : ""}`}>Latest</span>
+                                <span onClick={() => { setSorting("pa") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "pa" ? "underline" : ""}`}>Price: Low to high</span>
+                                <span onClick={() => { setSorting("pd") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "pd" ? "underline" : ""}`}>Price: High to low</span>
+                                <span onClick={() => { setSorting("na") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "na" ? "underline" : ""}`}>Name: Ascending</span>
+                                <span onClick={() => { setSorting("nd") }} className={`text-gray-600 flex mt-1 cursor-pointer text-lg ${sorting === "nd" ? "underline" : ""}`}>Name: Descending</span>
                             </div>
                         </div>
                         <div className="flex flex-col">
@@ -342,12 +329,12 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
                                     />
                                 ))}
                             </div>
-                            <div className="flex  justify-center">
+                            <div className="flex justify-center">
                                 {
                                     pageArray.length > 1 ?
                                         pageArray
                                             .map((p) =>
-                                                <div onClick={() => {setPageNum(p); scrollToDiv()}} className={`cursor-pointer p-2 m-1 text-sm font-normal text-gray-900 rounded-md ${pageNum === p ? "border bg-gray-300" : "bg-gray-100"}`} key={p}>
+                                                <div onClick={() => { setPageNum(p); }} className={`cursor-pointer p-2 m-1 text-sm font-normal text-gray-900 rounded-md ${pageNum === p ? "border bg-gray-300" : "bg-gray-100"}`} key={p}>
                                                     {p}
                                                 </div>)
                                         : null

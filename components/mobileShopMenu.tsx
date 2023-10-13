@@ -10,11 +10,13 @@ interface MobileMenuProps {
   eventDay: EventDays[];
   setSelectedEventMenu: (em: number) => void;
   setOpenRefine: (or: boolean) => void;
-  onCategoryChange: (category: number) => void;
-  onSubCategoryChange: (subCategory: number) => void;
+  setCategory: (category: number) => void;
+  setSubCategory: (subCategory: number) => void;
+  setSearchWord: (word: string) => void;
+  setPageNum: (page: number) =>void;
 }
 
-const MobileMenu = ({ menuCategory, eventDay, setSelectedEventMenu, setOpenRefine, onCategoryChange, onSubCategoryChange }: MobileMenuProps) => {
+const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMenu, setOpenRefine, setCategory, setSubCategory,setPageNum }: MobileMenuProps) => {
   const [openMobileCategory, setOpenMobileCategory] = useState(false);
   const [openMobileEvent, setOpenMobileEvent] = useState(false);
 
@@ -139,9 +141,11 @@ const MobileMenu = ({ menuCategory, eventDay, setSelectedEventMenu, setOpenRefin
                 <div
                   onClick={() => {
                     menu.category === "all" ? (
+                      setSearchWord(""),
+                      setCategory(menu.id),
+                      setSubCategory(-1),
                       setSelectedEventMenu(-1),
-                      onCategoryChange(menu.id),
-                      onSubCategoryChange(-1),
+                      setPageNum(1),
                       setOpenRefine(false)
                     ) :
                       (onClickArrow(menu.category))
@@ -163,10 +167,12 @@ const MobileMenu = ({ menuCategory, eventDay, setSelectedEventMenu, setOpenRefin
                           className="pl-4"
                           onClick={() => {
                             subMenu.platform === "mobile" ?
-                              (onCategoryChange(menu.id),
-                                onSubCategoryChange(-1)) :
-                              onSubCategoryChange(subMenu.id);
-                            setSelectedEventMenu(-1);
+                              (setCategory(menu.id),
+                              setSubCategory(-1)) :
+                              setSubCategory(subMenu.id);
+                              setSelectedEventMenu(-1);
+                              setPageNum(1);
+                              setSearchWord("");
                             setOpenRefine(false);
                           }}
                         >
