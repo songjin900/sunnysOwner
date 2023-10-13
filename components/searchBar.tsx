@@ -1,5 +1,5 @@
 import { Product } from "@prisma/client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import Input from "./input";
 import Link from "next/link";
@@ -32,8 +32,6 @@ export default function SearchBar({
   const [showItemFound, setShowItemFound] = useState(false);
 
   const fetcher = (url: string, queryParams: string) => fetch(`${url}?${queryParams}`).then(r => r.json());
-  
-  const inputRef = useRef(null);
 
   const closeSearchBar = () => {
     reset();
@@ -52,6 +50,7 @@ export default function SearchBar({
   }, [closeSearchBarFromLayout])
 
   const onValid = ({ word }: searchForm) => {
+
     if (!word || word.length <= 1) {
       setSearch("");
       setShowItemFound(false);
@@ -61,7 +60,7 @@ export default function SearchBar({
 
     setSearch(word);
 
-    fetcher(`/api/products`, `search=${word}&sort=la`)
+    fetcher(`/api/products`, `search=${word}&sort=la&page=1`)
       .then((searchedData) => {
         if (searchedData?.products.length === 0) {
           setShowErrorMessage(true);
@@ -78,7 +77,7 @@ export default function SearchBar({
 
   const handleButtonClick = () => {
     closeSearchBar();
-    router.replace(`/shop?search=${search}`);
+    router.push(`/shop?search=${search}&sort=la&page=1`);
   };
 
   useEffect(() => {
@@ -127,7 +126,7 @@ export default function SearchBar({
                         className="bg-white rounded-2xl max-h-[90%]" alt={""} />
                     </div>
                     <div className="flex flex-col pl-2 mt-2 w-full">
-                      <span className="text-lg font-md text-gray-800">{product.name}</span>          
+                      <span className="text-lg font-md text-gray-800">{product.name}</span>
                     </div>
                   </div>
                 </Link>

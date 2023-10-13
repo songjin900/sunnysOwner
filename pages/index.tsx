@@ -81,8 +81,24 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
                         </div>
                     </div>
 
+                    <div ref={divRefBouquet}>
+                        <CategorizedMenu menuType="bouquet" menuCategory={menuCategoryData} />
+                    </div >
+                    <div ref={divRefOrchid}>
+                        <CategorizedMenu menuType="orchid" menuCategory={menuCategoryData} />
+                    </div >
+                    <div ref={divRefIndoor}>
+                        <CategorizedMenu menuType="indoor" menuCategory={menuCategoryData} />
+                    </div>
+                    <div ref={divRefOutdoor}>
+                        <CategorizedMenu menuType="outdoor" menuCategory={menuCategoryData} />
+                    </div>
+                    <div ref={divRefAccessory}>
+                        <CategorizedMenu menuType="accessory" menuCategory={menuCategoryData} />
+                    </div>
+
                     <div>
-                        <div className="text-4xl text-black p-4 bg-white text-center font-medium my-2" ref={divRefEvent}>
+                        <div className="text-3xl text-black p-4 bg-white text-center font-medium my-2" ref={divRefEvent}>
                             Special Events
                         </div>
                         <div className="flex lg:flex-row flex-col">
@@ -153,21 +169,7 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
                             </div>
                         </div>
                     </div>
-                    <div ref={divRefBouquet}>
-                        <CategorizedMenu menuType="bouquet" menuCategory={menuCategoryData} />
-                    </div >
-                    <div ref={divRefOrchid}>
-                        <CategorizedMenu menuType="orchid" menuCategory={menuCategoryData} />
-                    </div >
-                    <div ref={divRefIndoor}>
-                        <CategorizedMenu menuType="indoor" menuCategory={menuCategoryData} />
-                    </div>
-                    <div ref={divRefOutdoor}>
-                        <CategorizedMenu menuType="outdoor" menuCategory={menuCategoryData} />
-                    </div>
-                    <div ref={divRefAccessory}>
-                        <CategorizedMenu menuType="accessory" menuCategory={menuCategoryData} />
-                    </div>
+
                 </div>
             </div>
         </Layout>
