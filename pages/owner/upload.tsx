@@ -25,6 +25,7 @@ interface UploadProductForm {
   photoThree: FileList;
   photoFour: FileList;
   photoFive: FileList;
+  size: string;
 }
 
 interface UploadProductMutation {
@@ -52,7 +53,7 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
     return id;
   };
 
-  const onValid = async ({ name, localImage, price, description, stockQuantity, eventDay }: UploadProductForm) => {
+  const onValid = async ({ name, localImage, price, description, stockQuantity, eventDay, size }: UploadProductForm) => {
     if (loading)
       return;
 
@@ -65,7 +66,6 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
     setShowLoading(true);
 
     let imageName = "";
-
     let firstChar = "";
     let secondChar = "";
 
@@ -116,7 +116,8 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
       photos: imageArray,
       category,
       subcategory,
-      eventDay
+      eventDay,
+      size
     });
     setShowLoading(false);
   }
@@ -353,7 +354,13 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
             type="number"
             kind="number"
           />
-
+ <Input
+            register={register("size", { required: true })}
+            label="size"
+            name="size"
+            type="text"
+            
+          />
           <TextArea register={register("description", { required: true })} name="description" label="Description" />
 
           <div className="w-full border-t-2 max-w-[30rem] pt-4 mt-4">

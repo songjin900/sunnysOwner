@@ -20,6 +20,7 @@ async function handler(
         photoId,
         photos,
         eventDay,
+        size
       },
     } = req;
 
@@ -34,6 +35,7 @@ async function handler(
         stockQuantity: Number(stockQuantity),
         image: photoId,
         modelNumber: name + payload,
+        size
       },
     });
 
