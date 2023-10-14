@@ -48,24 +48,28 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
     const [showImage, setShowImage] = useState(false);
     const [deleteSelected, setDeleteSelected] = useState(false);
     const router = useRouter();
-    // const divRefProduct = useRef<HTMLTableRowElement>(null);
-    const divRefProduct = useRef<any>(null);
-
 
     const { productId = "" } = router.query;
+
+    const fifthRowRef = useRef<any>(null);
+
+    const scrollToDiv = () => {
+        if (fifthRowRef.current)
+        fifthRowRef.current.scrollIntoView({ behavior: 'smooth' })
+      };
+
 
     useEffect(() => {
         if (productId && products) {
             setSelectedId(+productId);
-            const product = products.find((p)=>p.id===+productId);
+            const product = products.find((p) => p.id === +productId);
             setSelectedName(product?.name);
             setSelectedPrice(product?.price);
             setSelectedStockQuantity(product?.stockQuantity);
-            setSelectedEventDay(product?.productEventDay.map(p => p.eventDaysId.toString())??[])
+            setSelectedEventDay(product?.productEventDay.map(p => p.eventDaysId.toString()) ?? [])
             setDeleteSelected(false);
             setDescription(product?.description);
-            const productIndex = products.findIndex((p) => p.id === +productId);
-            scrollToProduct(productIndex);
+            scrollToDiv();
 
         }
     }, [productId])
@@ -79,7 +83,6 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
             setSelectedEventDay(eventDay)
             setDeleteSelected(false);
             setDescription(description);
-            window.history.pushState({}, '', '/owner/products');
         }
     }
 
@@ -131,15 +134,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
         if (selectedId)
             deleteProduct({ productId: selectedId });
     }
-
-    const productRefs = products?.map(() => useRef<any>(null));
-
-    const scrollToProduct = (index:number) => {
-        if (productRefs[index].current) {
-            productRefs[index].current.scrollIntoView({ behavior: 'smooth' });
-        }
-      };
-
+  
     return (
         <Layout title="Home" hasTabBar>
             {
@@ -173,15 +168,17 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
                                 </th>
                             </tr>
                         </thead>
-                        <tbody className="bg-white divide-y divide-gray-200" ref={divRefProduct} >
+                        <tbody className="bg-white divide-y divide-gray-200" >
                             {products?.map((product, index) =>
-                                <tr key={product.id} 
-                                ref={productRefs[index]} 
-                                className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`} 
-                                onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description)}>
-                                    <Link legacyBehavior href={`/products/${product.id}`}>
-                                        <td className="px-6 py-4 whitespace-nowrap text-blue-700 underline cursor-pointer">{product.id}</td>
-                                    </Link>
+                                <tr key={product.id}
+                                    // ref={productRefs[index]} 
+                                    ref={product.id === +productId ? fifthRowRef : null} // Set ref for 5th row
+
+                                    className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`}
+                                    onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description)}>
+                                        <Link legacyBehavior href={`/products/${product.id}`}>
+                                            <td className="px-6 py-4 whitespace-nowrap text-blue-700 underline cursor-pointer">{product.id}</td>
+                                        </Link>
                                     <td >
                                         <Image
                                             src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${product.image}/imageSlide`}
@@ -197,7 +194,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
                                     <td className="px-6 py-4 whitespace-nowrap ">{product.productEventDay?.map((p) => <div key={p.eventDaysId}>{eventDays.find((d) => d.id === Number(p.eventDaysId))?.name}</div>)}</td>
                                 </tr>)}
                         </tbody>
-                    </table>
+                    </table> 
                     <div className="flex flex-col min-w-[47rem] fixed top-0 -right-80 p-2 bg-gray-300">
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
@@ -223,7 +220,6 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
         </Layout>
     )
 }
-
 
 export const getServerSideProps = async () => {
     const products = await client.product.findMany({
