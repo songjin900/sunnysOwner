@@ -33,7 +33,7 @@ async function handler(
   //update Status
   if (req.method === "POST") {
     const {
-      body: { id, name, price, stockQuantity, eventDay, description },
+      body: { id, name, price, stockQuantity, eventDay, description, size },
     } = req;
     try {
       const product = await client.product.update({
@@ -44,7 +44,8 @@ async function handler(
           name,
           price: Number(price),
           stockQuantity: Number(stockQuantity),
-          description
+          description,
+          size
         },
       });
 
