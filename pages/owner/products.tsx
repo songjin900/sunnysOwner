@@ -181,7 +181,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
                                         </Link>
                                     <td >
                                         <Image
-                                            src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${product.image}/imageSlide`}
+                                            src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${product.image}/productId`}
                                             width={100}
                                             height={100}
                                             alt=""
