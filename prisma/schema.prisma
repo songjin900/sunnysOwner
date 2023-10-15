@@ -103,6 +103,7 @@ model Order {
   orderNumber String?
   deliveryStatus String? @default("Preparing")
   deliveryDate DateTime?
+  note String? @db.MediumText
 
   orderItem OrderItem[] 
   preOrderItem PreOrderItem[] 
