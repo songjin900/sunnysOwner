@@ -1,5 +1,5 @@
 import Layout from "@components/layout";
-import { NextPage } from "next";
+import { NextApiRequest, NextPage } from "next";
 import Link from "next/link";
 import useMutation from "@libs/client/useMutation";
 import { useForm } from "react-hook-form";
@@ -10,6 +10,8 @@ import Image from "next/image";
 import { EventDays } from "@prisma/client";
 import { useRouter } from 'next/router';
 import client from "@libs/server/client";
+import { withSsrSession } from "@libs/server/withSession";
+import { json } from "stream/consumers";
 
 interface productEventDayId {
     eventDaysId: string
@@ -37,7 +39,7 @@ interface productForm {
     size: string;
 }
 
-const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ products, eventDays }) => {
+const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin: boolean }> = ({ products, eventDays, isLogin }) => {
     const [updateProduct] = useMutation("/api/owner/products");
     const [deleteProduct, { loading: deleteLoading, data: deleteData }] = useMutation("/api/owner/products/delete")
     const { register, handleSubmit, setValue, setError, formState: { errors } } = useForm<productForm>();
@@ -51,7 +53,15 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
     const [showImage, setShowImage] = useState(false);
     const [deleteSelected, setDeleteSelected] = useState(false);
     const [eventVisibility, setEventVisibility] = useState(false);
+    const [showDeleteVisibility, setShowDeleteVisibility] = useState(false);
+
     const router = useRouter();
+
+    useEffect(() => {
+        if (!isLogin) {
+            router.push("/shop")
+        }
+    }, [isLogin])
 
     const { productId = "" } = router.query;
 
@@ -88,11 +98,11 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
             setSelectedEventDay(eventDay)
             setDeleteSelected(false);
             setDescription(description);
-            setSize(size??"");
+            setSize(size ?? "");
         }
     }
 
-    const onValid = ({ id, name, price, stockQuantity, eventDay, description , size}: productForm) => {
+    const onValid = ({ id, name, price, stockQuantity, eventDay, description, size }: productForm) => {
 
         if (!products)
             return
@@ -129,7 +139,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
 
     useEffect(() => {
 
-        if (selectedId && selectedName && selectedPrice && selectedStockQuantity && selectedDescription ) {
+        if (selectedId && selectedName && selectedPrice && selectedStockQuantity && selectedDescription) {
             setValue("id", selectedId);
             setValue("name", selectedName);
             setValue("price", selectedPrice);
@@ -208,6 +218,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
                     </table>
                     <div className="flex flex-col min-w-[47rem] fixed top-0 -right-80 p-2 bg-gray-300">
                         <button className="text-left rounded-2xl p-2 bg-yellow-400" onClick={() => setEventVisibility(p => !p)}>Show/Hide Event</button>
+                        <button className="text-left rounded-2xl p-2 bg-red-400" onClick={() => setShowDeleteVisibility(p => !p)}>Show/Hide Delete</button>
 
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
@@ -229,17 +240,70 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[] }> = ({ 
 
                             <button className="p-2 rounded-lg text-white bg-green-500">Update</button>
                         </form>
-
-                        <button className={`ml-4 p-2 rounded-lg text-white bg-red-500 w-28`} onClick={() => setDeleteSelected(true)}>Delete</button>
-                        <button className={`ml-4 mt-2 p-2 rounded-lg text-white bg-red-700 w-56 ${deleteSelected ? "block" : "hidden"}`} onClick={() => onDeleteClicked()} >Delete Confirmation</button>
+                        <div className={`${showDeleteVisibility ? 'block' : 'hidden'}`}>
+                            <button className={`ml-4 p-2 rounded-lg text-white bg-red-500 w-28`} onClick={() => setDeleteSelected(true)}>Delete</button>
+                            <button className={`ml-4 mt-2 p-2 rounded-lg text-white bg-red-700 w-56 ${deleteSelected ? "block" : "hidden"}`} onClick={() => onDeleteClicked()} >Delete Confirmation</button>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </Layout>
     )
 }
 
-export const getServerSideProps = async () => {
+export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: NextApiRequest }) {
+    let isLogin = false
+
+    try {
+        try {
+            const profile = await client.admin.findUnique({
+                where: {
+                    id: context.req.session.admin?.id
+                },
+            });
+
+            //Do not remove this.
+            //Somehow context.req.session.user === undefined does not get captured in the if statement
+            //so I am forcing it to be catched in the catch block by adding 1 to undefined.
+            if (context.req.session.admin) {
+                const test = context.req.session.admin?.id + 1;
+            }
+
+            if (context.req.session.admin === undefined || context.req.session.admin.id === undefined) {
+                isLogin = false;
+                context.req.session.destroy();
+            }
+            if (profile){
+                isLogin = true;
+            }
+            else {
+                return {
+                    props: {
+                        isLogin: false
+                    }
+                }
+            }
+        }
+        catch (err) {
+            isLogin = false;
+            context.req.session.destroy();
+            return {
+                props: {
+                    isLogin: false
+                }
+            }
+        }
+    }
+    catch (err) {
+        console.log(err);
+        return {
+            props: {
+                isLogin: false
+            }
+        }
+    }
+  
     const products = await client.product.findMany({
         select: {
             id: true,
@@ -264,9 +328,10 @@ export const getServerSideProps = async () => {
     return {
         props: {
             products: JSON.parse(JSON.stringify(products)),
-            eventDays: JSON.parse(JSON.stringify(eventDays))
+            eventDays: JSON.parse(JSON.stringify(eventDays)),
+            isLogin: JSON.parse(JSON.stringify(isLogin))
         },
     };
-};
+});
 
 export default Products;

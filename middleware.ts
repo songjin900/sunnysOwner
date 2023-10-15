@@ -12,9 +12,9 @@ export function middleware(req: NextRequest, ev: NextFetchEvent) {
   }
 
   // if (
-  //   !req.cookies.has("sunnyssession") &&
+  //   !req.cookies.has("sunnysadminsession") &&
   //   !req.nextUrl.pathname.startsWith("/api") &&
-  //   req.url.includes("/order")
+  //   req.url.includes("/owner")
   // ) {
   //   req.nextUrl.searchParams.set("from", req.nextUrl.pathname);
   //   req.nextUrl.pathname = "/shop";

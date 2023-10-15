@@ -1,5 +1,5 @@
 import Layout from "@components/layout";
-import { NextPage } from "next";
+import { NextApiRequest, NextPage } from "next";
 import Link from "next/link";
 import useMutation from "@libs/client/useMutation";
 import { useForm } from "react-hook-form";
@@ -9,6 +9,9 @@ import useSWR from "swr";
 import Checkmark from "@components/checkmark";
 import { Group, Product } from "@prisma/client";
 import Image from "next/image";
+import { withSsrSession } from "@libs/server/withSession";
+import client from "@libs/server/client";
+import { useRouter } from "next/router"
 
 interface productWithGroup extends Group {
     product: Product[];
@@ -24,16 +27,17 @@ interface groupForm {
     name: string
 }
 
-const Products: NextPage = () => {
+const GroupPage: NextPage<{ isLogin: boolean }> = ({ isLogin }) => {
     const [updateGroup] = useMutation("/api/owner/group");
     const { register, handleSubmit, setValue, setError, formState: { errors } } = useForm<groupForm>();
     const [selectedId, setSelectedId] = useState<number>();
     const [selectedName, setSelectedName] = useState<string>();
     const [showImage, setShowImage] = useState(false);
+    const router = useRouter();
 
     const { data, mutate } = useSWR<groupResponse>(`/api/owner/group`);
 
-    const clearId = ()=>{
+    const clearId = () => {
         setSelectedId(-1);
         setSelectedName("");
     }
@@ -81,6 +85,13 @@ const Products: NextPage = () => {
         }
     }, [selectedId, selectedName, setValue])
 
+
+    useEffect(() => {
+        if (!isLogin) {
+            router.push("/shop")
+        }
+    }, [isLogin])
+
     return (
         <Layout title="Home" hasTabBar>
             {
@@ -104,12 +115,12 @@ const Products: NextPage = () => {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                             {data?.group?.map((group) =>
-                                <tr key={group.id} className={`${selectedId && selectedId === group.id ? "bg-gray-300" : "bg-white"}`}  onClick={() => selectedProduct(group.id, group.name)}>
+                                <tr key={group.id} className={`${selectedId && selectedId === group.id ? "bg-gray-300" : "bg-white"}`} onClick={() => selectedProduct(group.id, group.name)}>
                                     <td className="px-6 py-4 whitespace-nowrap underline">{group.id}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">{group?.name}</td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex">
-                                            {group?.product?.slice(0,3).map((p) =>
+                                            {group?.product?.slice(0, 3).map((p) =>
                                                 <div key={p.id} className="cursor-pointer text-blue-500 border-2 rounded-md">
                                                     <Link legacyBehavior href={`/products/${p.id}`}>
                                                         <div className="flex gap-11">
@@ -131,13 +142,13 @@ const Products: NextPage = () => {
                         </tbody>
                     </table>
                     <div className="flex flex-col">
-                    <button className="p-2 rounded-lg text-white bg-green-500" onClick={()=>clearId()}>unselect</button>
+                        <button className="p-2 rounded-lg text-white bg-green-500" onClick={() => clearId()}>unselect</button>
 
-                    <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
-                        <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
-                        <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
-                        <button className="p-2 rounded-lg text-white bg-green-500">Enter</button>
-                    </form>
+                        <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
+                            <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
+                            <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
+                            <button className="p-2 rounded-lg text-white bg-green-500">Enter</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -145,4 +156,46 @@ const Products: NextPage = () => {
     )
 }
 
-export default Products;
+export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: NextApiRequest }) {
+    try {
+        let isLogin = false
+
+        try {
+            const profile = await client.admin.findUnique({
+                where: {
+                    id: context.req.session.admin?.id
+                },
+            });
+
+            //Do not remove this.
+            //Somehow context.req.session.user === undefined does not get captured in the if statement
+            //so I am forcing it to be catched in the catch block by adding 1 to undefined.
+            if (context.req.session.admin) {
+                const test = context.req.session.admin?.id + 1;
+            }
+
+            if (context.req.session.admin === undefined || context.req.session.admin.id === undefined) {
+                isLogin = false;
+                context.req.session.destroy();
+            }
+            if (profile) {
+                isLogin = true;
+            }
+        }
+        catch (err) {
+            isLogin = false;
+            context.req.session.destroy();
+        }
+
+        return {
+            props: {
+                isLogin,
+            }
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
+
+export default GroupPage;

@@ -7,6 +7,15 @@ async function handler(
   req: NextApiRequest,
   res: NextApiResponse<ResponseType>
 ) {
+  const {
+    session: { admin },
+  } = req;
+
+  if (!admin){
+    res.json({ ok: false });
+    return;
+  }
+  
   if (req.method === "GET") {
     const products = await client.product.findMany({
       select: {

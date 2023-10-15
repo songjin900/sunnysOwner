@@ -1,4 +1,4 @@
-import { NextPage } from "next";
+import { NextApiRequest, NextPage } from "next";
 import Layout from "@components/layout";
 import { useRouter } from "next/router";
 import Link from "next/link";
@@ -20,9 +20,15 @@ interface OrderResponse extends Order {
     orderItem: productWithOrderItem[]
 }
 
-const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order }) => {
+const Invoice: NextPage<{ ok: boolean; order: OrderResponse, isLogin: boolean }> = ({ ok, order, isLogin }) => {
     const today = new Date();
     const router = useRouter()
+
+    useEffect(() => {
+        if (!isLogin) {
+            router.push("/shop")
+        }
+    }, [isLogin])
 
     const handleGeneratePDF = () => {
         const pdf = new jsPDF('p', 'px', [735, 950]); //width height
@@ -38,14 +44,6 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
             });
         }
     };
-
-    // useEffect(() => {
-    //     if (!ok) {
-    //         router.replace("/");
-    //     }
-    // }, [ok, router])
-
-    console.log("I am in the invoice")
 
     const onDownloadButtonClick = () => {
         handleGeneratePDF();
@@ -85,7 +83,7 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
                                                     </div>
                                                     <div className="">
                                                         <div>{new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'long', day: '2-digit' }).format(new Date(order?.orderPlacedDate ?? today))}</div>
-                                                        <div>{Number(order.totalCostAfterTax)}</div>
+                                                        <div>${order.totalCostAfterTax ? Number(order.totalCostAfterTax).toFixed(2) : ''}</div>
                                                         <div>{order.deliveryStatus}</div>
                                                     </div>
                                                 </div>
@@ -128,7 +126,10 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
                                                         <div>Phone: {order.shippingAddress?.phone}</div>
                                                     </div>
                                                 </div>
-                                                <div className="flex justify-center m-2 text-xl">Items</div>
+                                                <div className="flex justify-center m-2 text-md">
+                                                    Note: {order.note ?? ""}
+                                                </div>
+                                                <div className="flex justify-center m-2 text-xl">Products</div>
                                                 {order.orderItem.map((orderItem) => (
                                                     <div key={orderItem.id} className="flex flex-col border-2 rounded-xl p-1 hover:border-green-400 cursor-pointer ">
                                                         <Link legacyBehavior href={`/products/${orderItem.productId}`}>
@@ -197,8 +198,56 @@ const Invoice: NextPage<{ ok: boolean; order: OrderResponse }> = ({ ok, order })
     )
 }
 
-export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; } }) {
+export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: NextApiRequest }) {
+    let isLogin = false
+    try {
+        try {
+            const profile = await client.admin.findUnique({
+                where: {
+                    id: context.req.session.admin?.id
+                },
+            });
 
+            //Do not remove this.
+            //Somehow context.req.session.user === undefined does not get captured in the if statement
+            //so I am forcing it to be catched in the catch block by adding 1 to undefined.
+            if (context.req.session.admin) {
+                const test = context.req.session.admin?.id + 1;
+            }
+
+            if (context.req.session.admin === undefined || context.req.session.admin.id === undefined) {
+                isLogin = false;
+                context.req.session.destroy();
+            }
+            if (profile) {
+                isLogin = true;
+            }
+            else {
+                return {
+                    props: {
+                        isLogin: false
+                    }
+                }
+            }
+        }
+        catch (err) {
+            isLogin = false;
+            context.req.session.destroy();
+            return {
+                props: {
+                    isLogin: false
+                }
+            }
+        }
+    }
+    catch (err) {
+        console.log(err);
+        return {
+            props: {
+                isLogin: false
+            }
+        }
+    }
     try {
         const { id } = context.query;
 
@@ -222,6 +271,7 @@ export const getServerSideProps = withSsrSession(async function (context: { quer
             props: {
                 ok: order ? true : false,
                 order: order ? JSON.parse(JSON.stringify(order)) : null,
+                isLogin: JSON.parse(JSON.stringify(isLogin))
             }
         }
     }

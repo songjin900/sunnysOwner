@@ -13,9 +13,14 @@ async function handler(
   res: NextApiResponse<ResponseType>
 ) {
   const {
-    session: { user },
+    session: { admin },
     body: { orderId, deliveryStatus, deliveryDate }
   } = req;
+
+  if (!admin){
+    res.json({ ok: false });
+    return;
+  }
 
   //Find all order - status here is payment status $
   if (req.method === "GET") {

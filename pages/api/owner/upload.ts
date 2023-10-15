@@ -8,6 +8,7 @@ async function handler(
   res: NextApiResponse<ResponseType>
 ) {
 
+
   if (req.method === "POST") {
     const {
       body: {
@@ -22,7 +23,12 @@ async function handler(
         eventDay,
         size
       },
+      session: { admin },
     } = req;
+    if (!admin){
+      res.json({ ok: false });
+      return;
+    }
 
     const payload = Math.floor(1000 + Math.random() * 9000) + "";
 

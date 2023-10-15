@@ -8,8 +8,14 @@ async function handler(
   res: NextApiResponse<ResponseType>
 ) {
   const {
+    session: { admin },
     body: { id, name },
   } = req;
+
+  if (!admin){
+    res.json({ ok: false });
+    return;
+  }
 
   if (req.method === "GET") {
     const group = await client.group.findMany({
