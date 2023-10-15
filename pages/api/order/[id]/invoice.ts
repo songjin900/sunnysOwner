@@ -8,14 +8,14 @@ async function handler(
   res: NextApiResponse<ResponseType>
 ) {
   const {
-    session: { user },
+    session: { admin },
     query: { id },
   } = req;
 
   //Get order by order id and user
   if (req.method === "GET") {
 
-    if (!user){
+    if (!admin){
       res.json({
         ok: false,
       });
@@ -25,7 +25,6 @@ async function handler(
     //good
     const order = await client.order.findFirst({
       where: {
-        userId: user.id,
         id: Number(id),
       },
       include: {
