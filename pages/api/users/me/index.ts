@@ -10,7 +10,7 @@ async function handler(
   try {
     const profile = await client.user.findUnique({
       where: {
-        id: req.session.user?.id,
+        id: req.session.admin?.id,
       },
     });
 

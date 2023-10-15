@@ -11,8 +11,14 @@ async function handler(
   //update Status
   if (req.method === "POST") {
     const {
+      session: { admin },
       body: { productId },
     } = req;
+  
+    if (!admin){
+      res.json({ ok: false });
+      return;
+    }
     try {
         const deleteEventDay = await client.productEventDay.deleteMany({
             where: {

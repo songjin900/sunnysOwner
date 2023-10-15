@@ -24,18 +24,8 @@ export default function GuestCheckout({ updateRegisteredUser = (result: boolean)
     const onValid = (data : GuestForm) => {
         if (loading)
             return;
-
-        if (data?.email === '') {
-            setError("email", { message: "Email is required" });
-            return; // Added return statement to stop execution after setting the error
-        }
-
-        if (!isValidEmail(data?.email)) {
-            setError("email", { message: "Invalid Email. Please try again" });
-            return; // Added return statement to stop execution after setting the error
-        }
-
-        addGuest({ email: data?.email });
+  
+        addGuest({ password: data?.email });
     }
 
     useEffect(() => {

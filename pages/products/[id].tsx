@@ -15,7 +15,6 @@ import GuestCheckout from "@components/guestCheckout";
 import Image from "next/image";
 import { withSsrSession } from "@libs/server/withSession";
 import Link from "next/link";
-import menucategory from "pages/api/utils/menucategory";
 
 interface MenuWithSubMenu extends SubMenuWithProductSubCat {
     menu: MenuCategory
@@ -105,7 +104,7 @@ const ItemDetail: NextPage<{ product: ProductWithSubCategoryImage; relatedProduc
         }
     }, [isLogin, userData])
 
-    const onEditClicked = () =>{
+    const onEditClicked = () => {
         router.push(`/owner/products?productId=${router.query.id}`)
     }
 
@@ -191,9 +190,16 @@ const ItemDetail: NextPage<{ product: ProductWithSubCategoryImage; relatedProduc
                                 </div>
 
                             </div>
-                            <button className="p-2 bg-red-300 rounded-3xl" onClick={()=>onEditClicked()}>
-                                수정하기
-                            </button>
+                            <>
+                                {
+                                    registeredUser ?
+                                        <button className="p-2 bg-red-300 rounded-3xl" onClick={() => onEditClicked()}>
+                                            수정하기
+                                        </button>
+                                        : null
+                                }
+                            </>
+
                         </div>
                     </div>
                     <RelatedProducts relatedProducts={relatedProducts} />
@@ -206,32 +212,29 @@ const ItemDetail: NextPage<{ product: ProductWithSubCategoryImage; relatedProduc
 export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: NextApiRequest }) {
 
     try {
-        let isLogin = true
+        let isLogin = false
 
         try {
 
-            const profile = await client.user.findUnique({
+            const profile = await client.admin.findUnique({
                 where: {
-                    id: context.req.session.user?.id
+                    id: context.req.session.admin?.id
                 },
             });
+
 
             //Do not remove this.
             //Somehow context.req.session.user === undefined does not get captured in the if statement
             //so I am forcing it to be catched in the catch block by adding 1 to undefined.
-            if (context.req.session.user) {
-                const test = context.req.session.user?.id + 1;
+            if (context.req.session.admin) {
+                const test = context.req.session.admin?.id + 1;
             }
 
-            if (context.req.session.user === undefined || context.req.session.user.id === undefined) {
+            if (context.req.session.admin === undefined || context.req.session.admin.id === undefined) {
                 isLogin = false;
                 context.req.session.destroy();
             }
-
-            if (!profile || (profile && profile.status !== "active")) {
-                isLogin = false;
-                context.req.session.destroy();
-            }
+            isLogin = true;
         }
         catch (err) {
             isLogin = false;

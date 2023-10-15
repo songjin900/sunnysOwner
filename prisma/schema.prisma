@@ -315,6 +315,12 @@ model Group {
     updatedAt DateTime @updatedAt
 
     name String
-
     product Product[]
+}
+
+model Admin{
+    id       Int      @id @default(autoincrement())
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+    password String @unique
 }

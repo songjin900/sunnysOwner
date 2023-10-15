@@ -6,14 +6,9 @@ import { withApiSession } from "@libs/server/withSession";
 async function handler(req: NextApiRequest, res: NextApiResponse<ResponseType>) {
 
     const {
-      session: { user },
+      session: { admin },
     } = req;
 
-    await client.token.deleteMany({
-        where: {
-            userId: user?.id
-        }
-    })
     await req.session.destroy();
 
     res.json({ ok: true });

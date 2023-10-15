@@ -9,58 +9,23 @@ async function handler(
 ) {
 
   const {
-    body: { email }
+    body: { password }
   } = req;
 
-  //1. Check if there is token
-  //2. If Token: 
-  
-  //If you enter this page then either your account is deleted or you are NEW
-  const maxUserId = await client.user.aggregate({
-    _max: {
-      id: true,
-    },
+  const admin = await client.admin.findUnique({
+    where: {
+      password
+    }
   });
 
-  let payload = Math.floor(100000 + Math.random() * 900000) + "";
-
-  let nextUserId = 1;
-
-  if (maxUserId?._max?.id) {
-    nextUserId = maxUserId._max.id + 1;
-  }
-
-  const token = await client.token.create({
-    data: {
-      payload,      
-      user: {
-        connectOrCreate: {
-          where: {
-            email,
-          },
-          create: {
-            email,
-            originalEmail: email
-          },
-        },
-      },
-    },
-  });
-
- 
-  if (!token) {
+  if (!admin) {
     return res.status(404).end();
   }
 
-  req.session.user = {
-    id: token.userId,
+  req.session.admin = {
+    id: admin.id,
   };
   await req.session.save();
-  await client.token.deleteMany({
-    where: {
-      userId: token.userId,
-    },
-  });
 
   return res.json({
     ok: true,

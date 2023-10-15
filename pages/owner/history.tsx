@@ -1,4 +1,4 @@
-import { NextPage } from "next";
+import { NextApiRequest, NextPage } from "next";
 import Layout from "@components/layout";
 import useSWR from "swr";
 import { useEffect, useState } from "react";
@@ -10,6 +10,8 @@ import { useRouter } from "next/router";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Image from "next/image";
+import { withSsrSession } from "@libs/server/withSession";
+import client from "@libs/server/client";
 
 interface ProductWithOrderItem extends OrderItem {
     product: Product
@@ -26,13 +28,19 @@ interface HistoryMutationResponse {
     order: AddressOrderItemWithOrder[]
 }
 
-const AllHistory: NextPage = () => {
+const AllHistory: NextPage<{ isLogin: boolean }> = ({ isLogin }) => {
     const router = useRouter();
     const { data } = useSWR<HistoryMutationResponse>(`/api/owner/history`);
     const [history, setHistory] = useState<AddressOrderItemWithOrder[]>([]);
     const [orderId, setOrderId] = useState(-1);
     const [updateStatus, { loading: statusLoading, data: statusData }] = useMutation<HistoryMutationResponse>(`/api/owner/history`);
     const today = new Date();
+
+    useEffect(() => {
+        if (!isLogin) {
+            router.push("/shop")
+        }
+    }, [isLogin])
 
     const onDatePickerChange = (date: Date) => {
         updateStatus({ orderId, deliveryDate: date });
@@ -200,5 +208,47 @@ const AllHistory: NextPage = () => {
         </Layout>
     )
 }
+
+export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: NextApiRequest }) {
+    try {
+        let isLogin = false
+
+        try {
+            const profile = await client.admin.findUnique({
+                where: {
+                    id: context.req.session.admin?.id
+                },
+            });
+
+            //Do not remove this.
+            //Somehow context.req.session.user === undefined does not get captured in the if statement
+            //so I am forcing it to be catched in the catch block by adding 1 to undefined.
+            if (context.req.session.admin) {
+                const test = context.req.session.admin?.id + 1;
+            }
+
+            if (context.req.session.admin === undefined || context.req.session.admin.id === undefined) {
+                isLogin = false;
+                context.req.session.destroy();
+            }
+            if (profile){
+                isLogin = true;
+            }
+        }
+        catch (err) {
+            isLogin = false;
+            context.req.session.destroy();
+        }
+
+        return {
+            props: {
+                isLogin,
+            }
+        }
+    }
+    catch (err) {
+        console.log(err);
+    }
+});
 
 export default AllHistory;

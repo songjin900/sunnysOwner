@@ -1,4 +1,4 @@
-import type { NextPage } from "next";
+import type { NextApiRequest, NextPage } from "next";
 import Button from "@components/button";
 import Input from "@components/input";
 import Layout from "@components/layout";
@@ -11,6 +11,7 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import LoadingButton from "@components/loadingButton";
 import client from "@libs/server/client";
+import { withSsrSession } from "@libs/server/withSession";
 
 interface UploadProductForm {
   name: string;
@@ -37,13 +38,19 @@ interface SubMenuWithMenu extends MenuCategory {
   subMenuCategory: SubMenuCategory[]
 }
 
-const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMenuCategory[]; eventDays: EventDays[],maxProductId: number }> = ({ menuCategory, subMenuCategory, eventDays,maxProductId }) => {
+const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMenuCategory[]; eventDays: EventDays[], maxProductId: number, isLogin: boolean }> = ({ menuCategory, subMenuCategory, eventDays, maxProductId, isLogin }) => {
   const router = useRouter();
   const { register, handleSubmit, watch } = useForm<UploadProductForm>();
   const [uploadProduct, { loading, data }] = useMutation<UploadProductMutation>("/api/owner/upload")
   const [showLoading, setShowLoading] = useState(false);
   const [category, setCategory] = useState(-1);
   const [subcategory, setSubCategory] = useState(-1);
+
+  useEffect(() => {
+    if (!isLogin) {
+        router.push("/shop")
+    }
+}, [isLogin])
 
   const uploadFile = async (file: FileList, name: string) => {
     const { uploadURL } = await (await fetch('/api/owner/files')).json();
@@ -71,7 +78,7 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
 
     try {
       firstChar = menuCategory.find((x) => x.id === category)?.category.charAt(0).toUpperCase() || "";
-      secondChar = subMenuCategory.find((x)=>x.id === subcategory)?.subCategory?.charAt(0).toUpperCase() || "";
+      secondChar = subMenuCategory.find((x) => x.id === subcategory)?.subCategory?.charAt(0).toUpperCase() || "";
       imageName = firstChar + secondChar;
     }
     catch (er: any) {
@@ -82,27 +89,27 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
     let photoId = null;
 
     if (photo && photo.length > 0) {
-      photoId = await uploadFile(photo, imageName+(maxProductId+1)+"-1");
+      photoId = await uploadFile(photo, imageName + (maxProductId + 1) + "-1");
       imageArray.push({ photoId: photoId, orderIndex: 1 });
     }
 
     if (photoTwo && photoTwo.length > 0) {
-      const id = await uploadFile(photoTwo, imageName+(maxProductId+1)+"-2");
+      const id = await uploadFile(photoTwo, imageName + (maxProductId + 1) + "-2");
       imageArray.push({ photoId: id, orderIndex: 2 });
     }
 
     if (photoThree && photoThree.length > 0) {
-      const id = await uploadFile(photoThree, imageName+(maxProductId+1)+"-3");
+      const id = await uploadFile(photoThree, imageName + (maxProductId + 1) + "-3");
       imageArray.push({ photoId: id, orderIndex: 3 });
     }
 
     if (photoFour && photoFour.length > 0) {
-      const id = await uploadFile(photoFour, imageName+(maxProductId+1)+"-4");
+      const id = await uploadFile(photoFour, imageName + (maxProductId + 1) + "-4");
       imageArray.push({ photoId: id, orderIndex: 4 });
     }
 
     if (photoFive && photoFive.length > 0) {
-      const id = await uploadFile(photoFive, imageName+(maxProductId+1)+"-5");
+      const id = await uploadFile(photoFive, imageName + (maxProductId + 1) + "-5");
       imageArray.push({ photoId: id, orderIndex: 5 });
     }
 
@@ -354,12 +361,12 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
             type="number"
             kind="number"
           />
- <Input
+          <Input
             register={register("size", { required: true })}
             label="size"
             name="size"
             type="text"
-            
+
           />
           <TextArea register={register("description", { required: true })} name="description" label="Description" />
 
@@ -367,29 +374,29 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
             <span>Type</span>
             <div className="flex flex-col mb-4 pl-2 pt-1">
               {
-                  menuCategory.map((menu) => (
-                    <div key={menu.id} className="flex flex-col">
-                      <div>
-                        <div className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
-                        <label className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 mr-2">{menu.categoryDisplay}</label>
-                      </div>
-                      <div className="flex flex-col pl-4">
-                        {
-                          menu.subMenuCategory ?
-                            menu.subMenuCategory.filter((sub) => sub.platform === "both").map((subMenu) => (
-                              <div key={subMenu.id} className="">
-                                <div className="">
-                                  <input required id="category-radio" type="radio" value="" name="category-radio" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600
-                               dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                    onChange={() => { setSubCategory(subMenu.id); setCategory(menu.id) }} />
-                                  <label htmlFor="size-radio" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 mr-2"> {subMenu.subCategoryDisplay}</label>
-                                </div>
-                              </div>
-                            )) : null
-                        }
-                      </div>
+                isLogin && menuCategory.map((menu) => (
+                  <div key={menu.id} className="flex flex-col">
+                    <div>
+                      <div className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                      <label className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 mr-2">{menu.categoryDisplay}</label>
                     </div>
-                  ))
+                    <div className="flex flex-col pl-4">
+                      {
+                        menu.subMenuCategory ?
+                          menu.subMenuCategory.filter((sub) => sub.platform === "both").map((subMenu) => (
+                            <div key={subMenu.id} className="">
+                              <div className="">
+                                <input required id="category-radio" type="radio" value="" name="category-radio" className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600
+                               dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                  onChange={() => { setSubCategory(subMenu.id); setCategory(menu.id) }} />
+                                <label htmlFor="size-radio" className="ml-2 text-sm font-medium text-gray-900 dark:text-gray-300 mr-2"> {subMenu.subCategoryDisplay}</label>
+                              </div>
+                            </div>
+                          )) : null
+                      }
+                    </div>
+                  </div>
+                ))
               }
             </div>
           </div>
@@ -403,7 +410,58 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
   );
 };
 
-export const getServerSideProps = async () => {
+export const getServerSideProps = withSsrSession(async function (context: { query: { id: any; }; req: NextApiRequest }) {
+  let isLogin = false
+
+  try {
+    try {
+      const profile = await client.admin.findUnique({
+        where: {
+          id: context.req.session.admin?.id
+        },
+      });
+
+      //Do not remove this.
+      //Somehow context.req.session.user === undefined does not get captured in the if statement
+      //so I am forcing it to be catched in the catch block by adding 1 to undefined.
+      if (context.req.session.admin) {
+        const test = context.req.session.admin?.id + 1;
+      }
+
+      if (context.req.session.admin === undefined || context.req.session.admin.id === undefined) {
+        isLogin = false;
+        context.req.session.destroy();
+      }
+      if (profile) {
+        isLogin = true;
+      }
+      else {
+        return {
+          props: {
+            isLogin: false
+          }
+        }
+      }
+    }
+    catch (err) {
+      isLogin = false;
+      context.req.session.destroy();
+      return {
+        props: {
+          isLogin: false
+        }
+      }
+    }
+  }
+  catch (err) {
+    console.log(err);
+    return {
+      props: {
+        isLogin: JSON.parse(JSON.stringify(isLogin)),    
+        }
+    }
+  }
+
 
   const eventDays = await client.eventDays.findMany({
   })
@@ -445,9 +503,10 @@ export const getServerSideProps = async () => {
       menuCategory: JSON.parse(JSON.stringify(menuCategory)),
       subMenuCategory: JSON.parse(JSON.stringify(subMenuCategory)),
       eventDays: JSON.parse(JSON.stringify(eventDays)),
-      maxProductId: product?.id ?? 0
+      maxProductId: product?.id ?? 0,
+      isLogin: JSON.parse(JSON.stringify(isLogin)),
     },
   };
-};
+});
 
 export default Upload;
