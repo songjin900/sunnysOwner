@@ -326,6 +326,7 @@ const HomePage: NextPage<{ menu: SubMenuWithMenu[]; event: EventDays[] }> = ({ m
                                         title={product.name}
                                         price={product.price}
                                         image={product.image}
+                                        stockQuantity={product.stockQuantity}
                                     />
                                 ))}
                             </div>

@@ -6,6 +6,7 @@ interface ItemProps {
     id: number;
     price: number;
     image: string;
+    stockQuantity: number
 }
 //shadow-md shadow-gray-400
 
@@ -13,7 +14,8 @@ export default function Item({
     title,
     price,
     id,
-    image
+    image,
+    stockQuantity
 }: ItemProps) {
     return (//bg-[#F4F4F4]
         <Link legacyBehavior href={`/products/${id}`}>
@@ -26,12 +28,13 @@ export default function Item({
                             width={400}
                             height={400}
                             alt={""}
-               
+
                         />
                     </div>
-                    <div className="flex flex-col pl-1 border-t-2 border-gray-200 overflow-hidden">
-                        <span className="text-sm md:text-lg font-md text-black pl-1 mt-2">{title}</span>
+                    <div className={`flex flex-col pl-1 border-t-2 border-gray-200 overflow-hidden ${stockQuantity > 0 ? "": "bg-red-300"}`}>
+                        <span className="text-sm md:text-lg font-md text-black pl-1 mt-2 truncate-text truncate">{title}</span>
                         <span className="text-xs md:text-sm text-black pl-1">${price}</span>
+                        <span className="text-xs md:text-sm text-black pl-1">Stock: {stockQuantity}</span>
                     </div>
                 </div>
             </a>

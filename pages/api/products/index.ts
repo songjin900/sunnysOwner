@@ -31,7 +31,7 @@ async function handler(
     }
 
     const where: any = {
-      stockQuantity: { gt: 0 },
+      stockQuantity: { gt: -1000 },
     };
 
     if (search) {
@@ -94,6 +94,7 @@ async function handler(
         name: true,
         price: true,
         image: true,
+        stockQuantity: true,
         productEventDay: {
           select: {
             eventDaysId: true,
