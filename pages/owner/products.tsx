@@ -11,7 +11,6 @@ import { EventDays } from "@prisma/client";
 import { useRouter } from 'next/router';
 import client from "@libs/server/client";
 import { withSsrSession } from "@libs/server/withSession";
-import { json } from "stream/consumers";
 
 interface productEventDayId {
     eventDaysId: string
@@ -50,6 +49,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
     const [selectedEventDay, setSelectedEventDay] = useState<string[]>([]);
     const [selectedDescription, setDescription] = useState<string>();
     const [selectedSize, setSize] = useState<string>();
+    const [selectedImage, setSelectedImage] = useState<string>();
     const [showImage, setShowImage] = useState(false);
     const [deleteSelected, setDeleteSelected] = useState(false);
     const [eventVisibility, setEventVisibility] = useState(false);
@@ -72,7 +72,6 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
             rowRef.current.scrollIntoView({ behavior: 'smooth' })
     };
 
-
     useEffect(() => {
         if (productId && products) {
             setSelectedId(+productId);
@@ -84,12 +83,13 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
             setDeleteSelected(false);
             setDescription(product?.description);
             setSize(product?.size);
+            setSelectedImage(product?.image)
             scrollToDiv();
 
         }
     }, [productId])
 
-    const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[], description: string, size: string) => {
+    const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[], description: string, size: string, image: string) => {
         if (id) {
             setSelectedId(id);
             setSelectedName(name);
@@ -99,6 +99,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
             setDeleteSelected(false);
             setDescription(description);
             setSize(size ?? "");
+            setSelectedImage(image);
         }
     }
 
@@ -196,7 +197,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
                                     ref={product.id === +productId ? rowRef : null} // Set ref for 5th row
 
                                     className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`}
-                                    onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description, product.size)}>
+                                    onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description, product.size, product.image)}>
                                     <Link legacyBehavior href={`/products/${product.id}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-blue-700 underline cursor-pointer">{product.id}</td>
                                     </Link>
@@ -219,7 +220,15 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
                     <div className="flex flex-col min-w-[47rem] fixed top-0 -right-80 p-2 bg-gray-300">
                         <button className="text-left rounded-2xl p-2 bg-yellow-400" onClick={() => setEventVisibility(p => !p)}>Show/Hide Event</button>
                         <button className="text-left rounded-2xl p-2 bg-red-400" onClick={() => setShowDeleteVisibility(p => !p)}>Show/Hide Delete</button>
-
+                        {/* <button className="text-left rounded-2xl p-2 bg-green-400" onClick={() => scrollToDiv()}>Locate Me</button> */}
+                        <div className="flex">
+                         <Image
+                                            src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${selectedImage}/productId`}
+                                            width={100}
+                                            height={100}
+                                            alt=""
+                                            loading="lazy" /> 
+                                            </div>
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
                             <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
