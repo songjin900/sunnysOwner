@@ -11,6 +11,7 @@ import { EventDays } from "@prisma/client";
 import { useRouter } from 'next/router';
 import client from "@libs/server/client";
 import { withSsrSession } from "@libs/server/withSession";
+import LoadingAnimation from "@components/loadingAnimation";
 
 interface productEventDayId {
     eventDaysId: string
@@ -39,7 +40,7 @@ interface productForm {
 }
 
 const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin: boolean }> = ({ products, eventDays, isLogin }) => {
-    const [updateProduct] = useMutation("/api/owner/products");
+    const [updateProduct, { loading: productLoading, data: productData }] = useMutation("/api/owner/products");
     const [deleteProduct, { loading: deleteLoading, data: deleteData }] = useMutation("/api/owner/products/delete")
     const { register, handleSubmit, setValue, setError, formState: { errors } } = useForm<productForm>();
     const [selectedId, setSelectedId] = useState<number>();
@@ -54,6 +55,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
     const [deleteSelected, setDeleteSelected] = useState(false);
     const [eventVisibility, setEventVisibility] = useState(false);
     const [showDeleteVisibility, setShowDeleteVisibility] = useState(false);
+    const [showLoadingAnimation, setShowLoadingAnimation] = useState(false);
 
     const router = useRouter();
 
@@ -62,6 +64,18 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
             router.push("/shop")
         }
     }, [isLogin])
+
+    useEffect(() => {
+        if (productData?.ok) {
+            setShowLoadingAnimation(false);
+            setShowImage(true);
+
+            const timer = setTimeout(() => {
+                setShowImage(false);
+            }, 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [productData])
 
     const { productId = "" } = router.query;
 
@@ -89,7 +103,6 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
     }, [productId])
 
     const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[], description: string, size: string, image: string) => {
-        console.log("92)")
         if (id) {
             setSelectedId(id);
             setSelectedName(name);
@@ -129,13 +142,7 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
             description,
             size
         });
-
-        setShowImage(true);
-
-        const timer = setTimeout(() => {
-            setShowImage(false);
-        }, 1000);
-        return () => clearTimeout(timer);
+        setShowLoadingAnimation(true);
     }
 
     useEffect(() => {
@@ -159,7 +166,10 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
     return (
         <Layout title="Home" hasTabBar>
             {
-                <Checkmark showIcon={showImage} />
+                <>
+                    <Checkmark showIcon={showImage} />
+                    <LoadingAnimation showLoadingAnimation={showLoadingAnimation} />
+                </>
             }
             <div className="px-4 md:px-20 py-4 bg-gray-100 w-full">
                 <div className="flex">
@@ -192,10 +202,9 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
                         <tbody className="bg-white divide-y divide-gray-200" >
                             {products?.map((product, index) =>
                                 <tr key={product.id}
-                                    // ref={productRefs[index]} 
-                                    ref={product.id === +productId ? rowRef : null} // Set ref for 5th row
+                                    ref={product.id === +productId ? rowRef : null}
 
-                                    className={`${selectedId && selectedId === product.id ? "bg-gray-300" : "bg-white"}`}
+                                    className={`${selectedId && selectedId === product.id ? "bg-gray-500" : product.stockQuantity === 0 ? "bg-red-200" : "bg-white"}`}
                                     onClick={() => selectedProduct(product.id, product.name, product.price, product.stockQuantity, product.productEventDay.map(p => p.eventDaysId.toString()), product.description, product.size, product.image)}>
                                     <Link legacyBehavior href={`/products/${product.id}`}>
                                         <td className="px-6 py-4 whitespace-nowrap text-blue-700 underline cursor-pointer">{product.id}</td>
