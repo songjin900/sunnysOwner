@@ -85,11 +85,11 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
             setSize(product?.size);
             setSelectedImage(product?.image)
             scrollToDiv();
-
         }
     }, [productId])
 
     const selectedProduct = (id: number, name: string, price: number, stockQuantity: number, eventDay: string[], description: string, size: string, image: string) => {
+        console.log("92)")
         if (id) {
             setSelectedId(id);
             setSelectedName(name);
@@ -140,15 +140,14 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
 
     useEffect(() => {
 
-        if (selectedId && selectedName && selectedPrice && selectedStockQuantity && selectedDescription) {
+        if (selectedId) {
             setValue("id", selectedId);
-            setValue("name", selectedName);
-            setValue("price", selectedPrice);
-            setValue("stockQuantity", selectedStockQuantity);
-            setValue("eventDay", selectedEventDay);
-            setValue("description", selectedDescription);
+            setValue("name", selectedName ?? "");
+            setValue("price", selectedPrice ?? 0);
+            setValue("stockQuantity", selectedStockQuantity ?? 0);
+            setValue("eventDay", selectedEventDay ?? "");
+            setValue("description", selectedDescription ?? "");
             setValue("size", selectedSize ?? "");
-
         }
     }, [selectedId, selectedName, selectedPrice, selectedStockQuantity, selectedEventDay, setValue, selectedDescription, selectedSize])
 
@@ -222,13 +221,13 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
                         <button className="text-left rounded-2xl p-2 bg-red-400" onClick={() => setShowDeleteVisibility(p => !p)}>Show/Hide Delete</button>
                         {/* <button className="text-left rounded-2xl p-2 bg-green-400" onClick={() => scrollToDiv()}>Locate Me</button> */}
                         <div className="flex">
-                         <Image
-                                            src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${selectedImage}/productId`}
-                                            width={100}
-                                            height={100}
-                                            alt=""
-                                            loading="lazy" /> 
-                                            </div>
+                            <Image
+                                src={`https://imagedelivery.net/F5uyA07goHgKR71hGfm2Tg/${selectedImage}/productId`}
+                                width={100}
+                                height={100}
+                                alt=""
+                                loading="lazy" />
+                        </div>
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
                             <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
@@ -283,7 +282,7 @@ export const getServerSideProps = withSsrSession(async function (context: { quer
                 isLogin = false;
                 context.req.session.destroy();
             }
-            if (profile){
+            if (profile) {
                 isLogin = true;
             }
             else {
@@ -312,7 +311,7 @@ export const getServerSideProps = withSsrSession(async function (context: { quer
             }
         }
     }
-  
+
     const products = await client.product.findMany({
         select: {
             id: true,
