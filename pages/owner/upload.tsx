@@ -343,7 +343,7 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
             register={register("price", { required: true })}
             label="Price"
             name="price"
-            type="text"
+            type="number"
             kind="price"
           />
           <Input
@@ -362,13 +362,13 @@ const Upload: NextPage<{ menuCategory: SubMenuWithMenu[]; subMenuCategory: SubMe
             kind="number"
           />
           <Input
-            register={register("size", { required: true })}
+            register={register("size", { required: false })}
             label="size"
             name="size"
             type="text"
 
           />
-          <TextArea register={register("description", { required: true })} name="description" label="Description" />
+          <TextArea register={register("description", { required: false })} name="description" label="Description" />
 
           <div className="w-full border-t-2 max-w-[30rem] pt-4 mt-4">
             <span>Type</span>

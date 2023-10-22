@@ -239,9 +239,9 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
                         </div>
                         <form className="p-4 space-y-4 w-1/2" onSubmit={handleSubmit(onValid)}>
                             <Input register={register("id", { required: true })} required label="id*" name="id" kind="text" type={""} disabled={true} />
-                            <Input register={register("name", { required: true })} required label="Name*" name="name" kind="text" type={""} />
-                            <Input register={register("price", { required: true })} required label="price*" name="price" kind="number" type={""} />
-                            <Input register={register("stockQuantity", { required: true })} required label="stock*" name="stockQuantity" kind="number" type={""} />
+                            <Input register={register("name", { required: true })} required label="제품 이름" name="name" kind="text" type={""} />
+                            <Input register={register("price", { required: true })} required label="가격 - 숫자" name="price" kind="number" type={"number"} />
+                            <Input register={register("stockQuantity", { required: true })} required label="재고(stock) - 숫자" name="stockQuantity" kind="number" type={"number"} />
                             <div className={`${eventVisibility ? 'block' : 'hidden'}`}>
                                 <Input
                                     register={register("eventDay", { required: true })}
@@ -252,8 +252,8 @@ const Products: NextPage<{ products: products[]; eventDays: EventDays[], isLogin
                                     eventDays={eventDays}
                                 />
                             </div>
-                            <Input register={register("description", { required: true })} required label="Description*" name="description" kind="text" type={""} />
-                            <Input register={register("size")} label="Size*" name="size" kind="text" type={""} />
+                            <Input register={register("description", { required: false })} label="Description(안써도됨)" name="description" kind="text" type={""} />
+                            <Input register={register("size",{ required: false })} label="싸이즈(팟일경우만)" name="size" kind="text" type={""} />
 
                             <button className="p-2 rounded-lg text-white bg-green-500">Update</button>
                         </form>
