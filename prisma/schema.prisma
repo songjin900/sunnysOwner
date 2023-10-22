@@ -203,7 +203,7 @@ model PreOrderItem {
     eventDays   EventDays     @relation(fields: [eventDaysId], references: [id])
     eventDaysId    Int   
 
-    product   Product     @relation(fields: [productId], references: [id])
+    product   Product     @relation(fields: [productId], references: [id], onDelete:Cascade)
     productId    Int    
      
     @@index([eventDaysId])
@@ -250,7 +250,7 @@ model ProductSubMenuCategory {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    product   Product     @relation(fields: [productId], references: [id])
+    product   Product     @relation(fields: [productId], references: [id], onDelete:Cascade)
     productId    Int     @unique
 
     subMenuCategory   SubMenuCategory     @relation(fields: [subMenuCategoryId], references: [id])
@@ -285,8 +285,8 @@ model StripePayment{
 
     payment_status String?
 
-  order      Order     @relation(fields: [orderId], references: [id], onDelete:Cascade)
-  orderId    Int     @unique
+    order      Order     @relation(fields: [orderId], references: [id], onDelete:Cascade)
+    orderId    Int     @unique
     
 }
 
