@@ -19,6 +19,7 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
     const divRefEvent = useRef<HTMLDivElement>(null);
     const divRefBouquet = useRef<HTMLDivElement>(null);
     const divRefOrchid = useRef<HTMLDivElement>(null);
+    const divRefArrangment = useRef<HTMLDivElement>(null);
     const divRefIndoor = useRef<HTMLDivElement>(null);
     const divRefOutdoor = useRef<HTMLDivElement>(null);
     const divRefAccessory = useRef<HTMLDivElement>(null);
@@ -37,6 +38,8 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
             divRefEvent.current.scrollIntoView({ behavior: 'smooth' })
         else if (category === "orchid" && divRefOrchid.current)
             divRefOrchid.current.scrollIntoView({ behavior: 'smooth' })
+        else if (category === "arrangement" && divRefArrangment.current)
+            divRefArrangment.current.scrollIntoView({ behavior: 'smooth' })
     };
 
     return (
@@ -87,6 +90,9 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
                     <div ref={divRefOrchid}>
                         <CategorizedMenu menuType="orchid" menuCategory={menuCategoryData} />
                     </div >
+                    <div ref={divRefArrangment}>
+                        <CategorizedMenu menuType="arrangement" menuCategory={menuCategoryData} />
+                    </div >
                     <div ref={divRefIndoor}>
                         <CategorizedMenu menuType="indoor" menuCategory={menuCategoryData} />
                     </div>
@@ -113,9 +119,9 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
                             </div>
                             <div className="w-full">
                                 <div className={`h-full grid grid-cols-2 
-                                ${data && data.length >= 5 ? `md:grid-cols-6 md:grid-rows-2 ` 
-                                    : data &&data.length >= 4 ? "md:grid-cols-5 md:grid-rows-1"
-                                    : `md:grid-cols-4 md:grid-rows-1`}`}>
+                                ${data && data.length >= 5 ? `md:grid-cols-6 md:grid-rows-2 `
+                                        : data && data.length >= 4 ? "md:grid-cols-5 md:grid-rows-1"
+                                            : `md:grid-cols-4 md:grid-rows-1`}`}>
                                     {
                                         data && data.length > 0 ?
                                             data.slice(0, 8).sort((a, b) => (
@@ -145,7 +151,7 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
                                         data && data.length > 0 ?
                                             <div className="h-full rounded-3xl p-1 md:p-3">
                                                 <Link legacyBehavior href={`/shop`}>
-                                                    <div className={`h-full items-center flex flex-col justify-center p-2 bg-[#F4F4F4] hover:-translate-y-5 rounded-3xl cursor-pointer flex-1`}>                                                    
+                                                    <div className={`h-full items-center flex flex-col justify-center p-2 bg-[#F4F4F4] hover:-translate-y-5 rounded-3xl cursor-pointer flex-1`}>
                                                         <div className="flex p-1">
                                                             <div className="text-black text-lg">Show All</div>
                                                         </div>

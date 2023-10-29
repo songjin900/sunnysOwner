@@ -13,10 +13,10 @@ interface MobileMenuProps {
   setCategory: (category: number) => void;
   setSubCategory: (subCategory: number) => void;
   setSearchWord: (word: string) => void;
-  setPageNum: (page: number) =>void;
+  setPageNum: (page: number) => void;
 }
 
-const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMenu, setOpenRefine, setCategory, setSubCategory,setPageNum }: MobileMenuProps) => {
+const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMenu, setOpenRefine, setCategory, setSubCategory, setPageNum }: MobileMenuProps) => {
   const [openMobileCategory, setOpenMobileCategory] = useState(false);
   const [openMobileEvent, setOpenMobileEvent] = useState(false);
 
@@ -25,7 +25,7 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
   const [openOutdoor, setOpenOutdoor] = useState(false);
   const [openAccessory, setAccessory] = useState(false);
   const [openOrchid, setOrchid] = useState(false);
-
+  const [openArrangement, setArrangement] = useState(false);
 
   const returnState = (category: string) => {
     if (category === 'bouquet') {
@@ -43,6 +43,9 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
     else if (category === 'orchid') {
       return openOrchid
     }
+    else if (category === 'arrangement') {
+      return openArrangement
+    }
   }
   const handleMenuArrows = (category: string) => {
     if (category === 'bouquet') {
@@ -59,6 +62,9 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
     }
     else if (category === 'orchid') {
       return renderArrows(openOrchid)
+    }
+    else if (category === 'arrangement') {
+      return renderArrows(openArrangement)
     }
   }
 
@@ -83,6 +89,7 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
       setOpenOutdoor(prev => !prev)
       setAccessory(false)
       setOrchid(false)
+      setArrangement(false)
     }
     else if (category === 'accessory') {
       setOpenBouquet(false)
@@ -90,6 +97,7 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
       setOpenOutdoor(false)
       setAccessory(prev => !prev)
       setOrchid(false)
+      setArrangement(false)
     }
     else if (category === 'orchid') {
       setOpenBouquet(false)
@@ -97,6 +105,15 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
       setOpenOutdoor(false)
       setAccessory(false)
       setOrchid(prev => !prev)
+      setArrangement(false)
+    }
+    else if (category === 'arrangement') {
+      setOpenBouquet(false)
+      setOpenIndoor(false)
+      setOpenOutdoor(false)
+      setAccessory(false)
+      setOrchid(false)
+      setArrangement(prev=>!prev)
     }
   }
 
@@ -161,6 +178,7 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
                   {menu.subMenuCategory
                     .slice(0)
                     .sort((a, b) => (a.subcategoryIndex ?? 0) > (b.subcategoryIndex ?? 0) ? 1 : -1)
+                    .filter((x) => x.visibility === true)
                     .map((subMenu) => (
                       <div key={subMenu.id}>
                         <div
@@ -168,11 +186,11 @@ const MobileMenu = ({ menuCategory, eventDay, setSearchWord, setSelectedEventMen
                           onClick={() => {
                             subMenu.platform === "mobile" ?
                               (setCategory(menu.id),
-                              setSubCategory(-1)) :
+                                setSubCategory(-1)) :
                               setSubCategory(subMenu.id);
-                              setSelectedEventMenu(-1);
-                              setPageNum(1);
-                              setSearchWord("");
+                            setSelectedEventMenu(-1);
+                            setPageNum(1);
+                            setSearchWord("");
                             setOpenRefine(false);
                           }}
                         >
