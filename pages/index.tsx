@@ -45,7 +45,7 @@ const MainPage: NextPage<{ data: EventDays[]; menuCategoryData: SubMenuWithMenu[
     return (
         <Layout hasTabBar title="Main">
             <LoadingAnimation showLoadingAnimation={showLoadingAnimation} />
-            <div className={`bg-white w-full flex ${showLoadingAnimation ? "opacity-30" : "opacity-100"}`}>
+            <div className={`bg-white w-full ${showLoadingAnimation ? "opacity-30" : "opacity-100"}`}>
                 <div className="flex flex-col">
                     <div className="flex">
                         <div className="flex flex-col items-center justify-center w-full space-y-2 p-2">
