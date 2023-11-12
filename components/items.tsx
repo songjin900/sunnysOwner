@@ -36,14 +36,7 @@ export default function Item({
               stockQuantity > 0 ? "" : "bg-red-300"
             }`}
           >
-            <span
-              className={`font-md text-black pl-1 truncate-text truncate 
-                            ${
-                              title.length > 30
-                                ? "lg:text-base md:text-sm text-xs"
-                                : "lg:text-lg md:text-base text-sm"
-                            }`}
-            >
+            <span className="text-sm md:text-lg font-md text-black pl-1">
               {title}
             </span>
             <span className="text-xs md:text-sm text-black pl-1">${price}</span>
