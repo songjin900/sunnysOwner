@@ -17,6 +17,17 @@ export default function Item({
   image,
   stockQuantity,
 }: ItemProps) {
+
+  const capitalizeAfterSpace = (inputString: string) => {
+    // Capitalize the first character of the string
+    let result = inputString.charAt(0).toUpperCase() + inputString.slice(1);
+
+    // Capitalize the first character after each space
+    result = result.replace(/(?:^|\s)\S/g, (match) => match.toUpperCase());
+
+    return result;
+  };
+
   return (
     //bg-[#F4F4F4]
     <Link legacyBehavior href={`/products/${id}`}>
@@ -37,7 +48,7 @@ export default function Item({
             }`}
           >
             <span className="text-sm md:text-lg font-md text-black pl-1">
-              {title}
+              {capitalizeAfterSpace(title)}
             </span>
             <span className="text-xs md:text-sm text-black pl-1">${price}</span>
             <span className="text-xs md:text-sm text-black pl-1">
